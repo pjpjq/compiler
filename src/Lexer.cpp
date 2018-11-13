@@ -4,140 +4,216 @@
 
 #include "Lexer.h"
 
-bool Lexer::is_alpha_or_underscore(char ch) {
-    return std::isalpha(ch) || ch == '_';
+Token::Token(TokenOutputType token_output_type, int token_val_int, const std::string &token_val_string)
+        : token_output_type(token_output_type), token_val_int(token_val_int), token_val_string(token_val_string) {}
+
+std::string Token::get_output_string() {
+    return nameof(token_output_type) + " " + token_val_string;
 }
 
-bool Lexer::is_plus_or_minus_sym(std::string ch) {
-    return ch == PLUS_SYM || ch == MINUS_SYM;
+TokenOutputType Token::get_output_type() {
+    return token_output_type;
 }
 
-bool Lexer::is_mul_or_div_sym(std::string ch) {
-    return ch == MUL_SYM || ch == DIV_SYM;
+int Token::get_val_int() {
+    return token_val_int;
 }
 
-bool Lexer::is_const_sym(std::string str) {
-    return str == CONST_SYM;
+std::string Token::get_val_string() {
+    return token_val_string;
 }
 
-bool Lexer::is_int_sym(std::string str) {
-    return str == INT_SYM;
+
+Token fetch_token() {
+    buffer.clear();
+    fetch_char_skipping_spaces(); /* 跳过空格取一个字符 */
+    
+    if (is_alpha_or_underscore(cur_ch)) { /* identifier or keyword */
+        buffer.push_back(cur_ch);
+        fetch_char();
+        while (is_alpha_or_underscore(cur_ch) || isdigit(cur_ch)) { /* 一直读到不是字母或数字的字符 */
+            buffer.push_back(cur_ch);
+            fetch_char();
+        }
+        retract();
+        if (is_keyword(buffer)) {
+            return Token(KEYWORD, 0, buffer);
+        } else { /* 不是 keyword 就是标识符 */
+            return Token(IDENTIFIER, 0, buffer);
+        }
+    }
+    
+    if (isdigit(cur_ch)) { /* unsigned int or 0. */
+        buffer.push_back(cur_ch);
+        if (cur_ch == '0') {
+            return Token(ZERO, 0, buffer);
+        } else {
+            fetch_char();
+            while (isdigit(cur_ch)) {
+                buffer.push_back(cur_ch);
+                fetch_char();
+            }
+            retract();
+            if (buffer.size() >= MAX_N_DIGITS_INT) {
+                error_message("Integer too large: " + buffer + "with length " + std::to_string(buffer.size()));
+            }
+            return Token(UNSIGNED_INTEGER, std::atoi(buffer.c_str()), buffer);
+        }
+    }
+    
+    if (is_single_quote_sym(cur_ch)) { /* 是单引号 */
+        fetch_char();
+        if (is_between_single_quote_type(std::string{cur_ch})) { /* 是单引号内字符 */
+            buffer.push_back(cur_ch);
+            fetch_char();
+            if (is_single_quote_sym(cur_ch)) { /* 配对 ' */
+                return Token(CHAR, buffer[0], buffer);
+            } else {
+                error_message("Expected single quote, now get " + std::string{cur_ch});
+                return Token(UNKNOWN_TYPE, cur_ch, std::string{cur_ch});
+            }
+        } else {
+            error_message("Invalid symbol for single quote char: " + std::string{cur_ch});
+            return Token(UNKNOWN_TYPE, cur_ch, std::string{cur_ch});
+        }
+    }
+    
+    if (is_double_quote_sym(cur_ch)) { /* 是双引号 */
+        fetch_char();
+        while (is_between_double_quote_type(std::string{cur_ch})) { /* 直到取不出符合双引号内字符为止 */
+            buffer.push_back(cur_ch);
+            fetch_char();
+        }
+        
+        for (char ch : buffer) {
+            assert(ch != '"');
+        }
+        
+        if (is_double_quote_sym(cur_ch)) { /* 匹配双引号 */
+            return Token(STRING, (int) buffer.size(), buffer);
+        } else {
+            error_message("Expected double quote, now get " + std::string{cur_ch});
+            return Token(UNKNOWN_TYPE, cur_ch, std::string{cur_ch});
+        }
+    }
+    
+    if (cur_ch == '<' || cur_ch == '>' || cur_ch == '=') { /* <= >= == < > = */
+        buffer.push_back(cur_ch);
+        fetch_char();
+        if (cur_ch == '=') {
+            buffer.push_back(cur_ch);
+        } else {
+            retract();
+        }
+        return Token(SEPARATOR, buffer[0], buffer);
+    }
+    
+    if (cur_ch == '!') { /* != */
+        buffer.push_back(cur_ch);
+        fetch_char();
+        if (cur_ch == '=') {
+            buffer.push_back(cur_ch);
+            return Token(SEPARATOR, buffer[0], buffer);
+        } else {
+            error_message("Expected \"=\" after \"!\" now get " + std::string{cur_ch});
+            return Token(UNKNOWN_TYPE, buffer[0], buffer);
+        }
+    }
+    
+    if (cur_ch == '+' || cur_ch == '-' || cur_ch == '*' || cur_ch == '/' ||
+        cur_ch == ',' || cur_ch == ';' || cur_ch == ':' ||
+        cur_ch == '(' || cur_ch == ')' || cur_ch == '[' || cur_ch == ']' || cur_ch == '{' || cur_ch == '}') {
+        buffer.push_back(cur_ch);
+        return Token(SEPARATOR, buffer[0], buffer);
+    }
+    
+    /* Shouldn't reach here! */
+    assert(!is_separator(std::string{cur_ch}));
+    error_message("Unknown token type: " + std::string{cur_ch});
+    return Token(UNKNOWN_TYPE, buffer[0], buffer);
 }
 
-bool Lexer::is_char_sym(std::string str) {
-    return str == CHAR_SYM;
+void fetch_char_skipping_spaces() {
+    while (isspace(fetch_char())) { ; }
 }
 
-bool Lexer::is_void_sym(std::string str) {
-    return str == VOID_SYM;
+char fetch_char() {
+    cur_ch = source_file.get();
+    if (is_newline(cur_ch)) {
+        ++line_count;
+    }
+    return cur_ch;
 }
 
-bool Lexer::is_main_sym(std::string str) {
-    return str == MAIN_SYM;
+void retract() {
+    source_file.putback(cur_ch);
+    if (is_newline(cur_ch)) {
+        --line_count;
+    }
+    cur_ch = '\0';
 }
 
-bool Lexer::is_if_sym(std::string str) {
-    return str == IF_SYM;
+
+void error_message(const std::string &error_info) {
+    std::cout << "[ERROR] in line " << line_count << ": " << error_info << std::endl;
+    ++n_errors;
 }
 
-bool Lexer::is_else_sym(std::string str) {
-    return str == ELSE_SYM;
+bool is_newline(char ch) {
+    return ch == '\r' || ch == '\n';
 }
 
-bool Lexer::is_do_sym(std::string str) {
-    return str == DO_SYM;
+bool is_alpha_or_underscore(char ch) {
+    return isalpha(ch) || ch == '_';
 }
 
-bool Lexer::is_while_sym(std::string str) {
-    return str == WHILE_SYM;
+bool is_keyword(const std::string &str) {
+    return KEYWORD_SET.count(str) > 0;
 }
 
-bool Lexer::is_for_sym(std::string str) {
-    return str == FOR_SYM;
+bool is_single_quote_sym(char ch) {
+    return ch == '\'';
 }
 
-bool Lexer::is_scanf_sym(std::string str) {
-    return str == SCANF_SYM;
+bool is_double_quote_sym(char ch) {
+    return ch == '\"';
 }
 
-bool Lexer::is_printf_sym(std::string str) {
-    return str == PRINTF_SYM;
+bool is_plus_or_minus(const std::string &str) {
+    return is_plus(str) || is_minus(str);
 }
 
-bool Lexer::is_return_sym(std::string str) {
-    return str == RETURN_SYM;
+bool is_plus(const std::string &str) {
+    return str.size() == 1 && str[0] == '+';
 }
 
-bool Lexer::is_single_quote_sym(std::string str) {
-    return str == SINGLE_QUOTE_SYM;
+bool is_minus(const std::string &str) {
+    return str.size() == 1 && str[0] == '-';
 }
 
-bool Lexer::is_double_quote_sym(std::string str) {
-    return str == DOUBLE_QUOTE_SYM;
+bool is_mul_or_div(const std::string &str) {
+    return is_mul(str) || is_div(str);
 }
 
-bool Lexer::is_comma_sym(std::string ch) {
-    return ch == COMMA_SYM;
+bool is_mul(const std::string &str) {
+    return str.size() == 1 && str[0] == '*';
 }
 
-bool Lexer::is_semicolon_sym(std::string ch) {
-    return ch == SEMICOLON_SYM;
+bool is_div(const std::string &str) {
+    return str.size() == 1 && str[0] == '/';
 }
 
-bool Lexer::is_colon_sym(std::string ch) {
-    return ch == COLON_SYM;
+bool is_between_single_quote_type(const std::string &str) {
+    return is_plus_or_minus(str) || is_mul_or_div(str) ||
+           (str.size() == 1 && (isdigit(str[0]) || is_alpha_or_underscore(str[0])));
 }
 
-bool Lexer::is_assign_sym(std::string ch) {
-    return ch == ASSIGN_SYM;
+bool is_between_double_quote_type(const std::string &str) {
+    return str.size() == 1 && (str[0] >= 32 && str[0] <= 126 && str[0] != 34);
 }
 
-bool Lexer::is_eq_sym(std::string str) {
-    return str == EQ_SYM;
-}
-
-bool Lexer::is_ne_sym(std::string str) {
-    return str == NE_SYM;
-}
-
-bool Lexer::is_lt_sym(std::string str) {
-    return str == LT_SYM;
-}
-
-bool Lexer::is_gt_sym(std::string str) {
-    return str == GT_SYM;
-}
-
-bool Lexer::is_le_sym(std::string str) {
-    return str == LE_SYM;
-}
-
-bool Lexer::is_ge_sym(std::string str) {
-    return str == GE_SYM;
-}
-
-bool Lexer::is_lparathesis_sym(std::string ch) {
-    return ch == LPARENTHESIS_SYM;
-}
-
-bool Lexer::is_rparathesis_sym(std::string ch) {
-    return ch == RPARENTHESIS_SYM;
-}
-
-bool Lexer::is_lbracket_sym(std::string ch) {
-    return ch == LBRACKET_SYM;
-}
-
-bool Lexer::is_rbracket_sym(std::string ch) {
-    return ch == RBRACKET_SYM;
-}
-
-bool Lexer::is_lbrace_sym(std::string ch) {
-    return ch == LBRACE_SYM;
-}
-
-bool Lexer::is_rbrace_sym(std::string ch) {
-    return ch == RBRACE_SYM;
+bool is_separator(const std::string &str) {
+    return SEPARATOR_SET.count(str) > 0;
 }
 
 
