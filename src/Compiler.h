@@ -11,19 +11,27 @@
 #include "Lexer.h"
 
 extern std::fstream source_file;
-char cur_ch;
-std::string buffer;
-Token cur_token;
-int line_count;
-int n_errors;
+extern char cur_ch;
+extern std::string buffer;
+extern Token cur_token;
+extern int line_count;
+extern int n_errors;
 
 void init_compiler();
 
 /**
- * C0 编译器 API
- * @param source_file_path 源代码文件路径
+ *
+ * @param source_file_path
+ * @param output_file_path
+ * @param output_file_and_std
+ * @return
  */
-int compile(const std::string &source_file_path);
+bool compile(const std::string &source_file_path, const std::string &output_file_path = "",
+            bool output_file_and_std = true);
+
+bool redirect_cout(const std::string &output_file_path);
+
+bool cout_output_file(const std::string &output_file_path, std::streambuf *cout_buf);
 
 void print_compiler_results();
 

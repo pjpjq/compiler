@@ -8,7 +8,7 @@ Token::Token(TokenOutputType token_output_type, int token_val_int, const std::st
         : token_output_type(token_output_type), token_val_int(token_val_int), token_val_string(token_val_string) {}
 
 std::string Token::get_output_string() {
-    return nameof(token_output_type) + " " + token_val_string;
+    return token_output_names[token_output_type] + " " + token_val_string;
 }
 
 TokenOutputType Token::get_output_type() {
@@ -27,7 +27,6 @@ std::string Token::get_val_string() {
 Token fetch_token() {
     buffer.clear();
     fetch_char_skipping_spaces(); /* 跳过空格取一个字符 */
-    
     if (is_alpha_or_underscore(cur_ch)) { /* identifier or keyword */
         buffer.push_back(cur_ch);
         fetch_char();
@@ -127,6 +126,9 @@ Token fetch_token() {
         return Token(SEPARATOR, buffer[0], buffer);
     }
     
+    if (cur_ch == EOF) {
+        return Token(END_OF_FILE, -1, "EOF");
+    }
     /* Shouldn't reach here! */
     assert(!is_separator(std::string{cur_ch}));
     error_message("Unknown token type: " + std::string{cur_ch});
@@ -138,10 +140,12 @@ void fetch_char_skipping_spaces() {
 }
 
 char fetch_char() {
-    cur_ch = source_file.get();
+    cur_ch = (char) source_file.get();
+    assert (source_file.is_open());
     if (is_newline(cur_ch)) {
         ++line_count;
     }
+//    std::cout << cur_ch - 0 << std::endl;
     return cur_ch;
 }
 

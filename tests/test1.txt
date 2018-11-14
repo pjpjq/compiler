@@ -11,44 +11,44 @@ char number_char = '1';
 
 void no_statement(int i, int j) {
     const char S = 'S';
-    
+
     int n;
 }
 
 void dummy_test() {
     const char C = 'A';
     const int n1 = 1;
-    
+
     int c_int, i;
     char ch, chs[10];
     int j;
-    
+
     i = +0;
     j = +i + 5;
     j = -i - j;
     i = i / 1;
     j = -1 * j;
     i = -0;
-    
+
     ;;
     { ; }
     { ;
         {{ ; }}
     }
     {}
-    
+
     do i = i + 1;
     while (i < j)
-    
+
     do {
         i = i - 1;
         j = j + 1;
     } while (i > j)
-    
+
     for (i = j; i >= 0; i = i - 1) {}
-    
+
     no_statement(i, j);
-    
+
     scanf(i, j);
     printf(i + j);
 }
@@ -75,7 +75,7 @@ int fibonacci_recursive(int n) {
 
 void precompute() {
     int i;
-    
+
     dp[0] = 0;
     dp[1] = 1;
     for (i = 2; i < MAX_N; i = i + 1) {
@@ -92,7 +92,7 @@ int fibonacci_dp(int n) {
         error(n);
         return (-1);
     }
-    
+
     if (precomputed == 0) {
         precompute();
     }
@@ -101,7 +101,7 @@ int fibonacci_dp(int n) {
 
 void main() {
     int n_tests, i, n, ans_rec, ans_dp;
-    
+
     dummy_test();
     precompute();
     scanf(n_tests);
