@@ -22,6 +22,31 @@ void init_compiler() {
     n_tokens = 0;
 }
 
+bool redirect_cout(const std::string &output_file_path) {
+    assert (!output_file_path.empty());
+    
+    output_file = std::fstream(output_file_path, std::ios::out);
+    if (!output_file.is_open()) {
+        std::cout << "[ERROR] " << output_file_path << " cannot be opened!" << std::endl;
+        return false;
+    }
+    std::cout.rdbuf(output_file.rdbuf());
+    return true;
+}
+
+bool cout_output_file(const std::string &output_file_path, std::streambuf *cout_buf) {
+    assert (!output_file_path.empty());
+    
+    std::cout.rdbuf(cout_buf);
+    output_file = std::fstream(output_file_path, std::ios::in);
+    if (!output_file.is_open()) {
+        std::cout << "[ERROR] " << output_file_path << " cannot be opened!" << std::endl;
+        return false;
+    }
+    std::cout << output_file.rdbuf();
+    return true;
+}
+
 bool compile(const std::string &source_file_path, const std::string &output_file_path,
              bool output_file_and_std) {
     source_file = std::fstream(source_file_path, std::ios::in);
@@ -51,30 +76,5 @@ bool compile(const std::string &source_file_path, const std::string &output_file
             return false;
         }
     }
-    return true;
-}
-
-bool redirect_cout(const std::string &output_file_path) {
-    assert (!output_file_path.empty());
-    
-    output_file = std::fstream(output_file_path, std::ios::out);
-    if (!output_file.is_open()) {
-        std::cout << "[ERROR] " << output_file_path << " cannot be opened!" << std::endl;
-        return false;
-    }
-    std::cout.rdbuf(output_file.rdbuf());
-    return true;
-}
-
-bool cout_output_file(const std::string &output_file_path, std::streambuf *cout_buf) {
-    assert (!output_file_path.empty());
-    
-    std::cout.rdbuf(cout_buf);
-    output_file = std::fstream(output_file_path, std::ios::in);
-    if (!output_file.is_open()) {
-        std::cout << "[ERROR] " << output_file_path << " cannot be opened!" << std::endl;
-        return false;
-    }
-    std::cout << output_file.rdbuf();
     return true;
 }
