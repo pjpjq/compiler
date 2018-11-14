@@ -70,7 +70,7 @@ bool compile(const std::string &source_file_path, const std::string &output_file
         std::cout << n_tokens << " " << cur_token.get_output_string() << " in line " << line_count << std::endl;
     }
     
-    /* 两个都输出 */
+    /* 输出到文件以及 stdout */
     if (!output_file_path.empty() && output_file_and_std) {
         if (!cout_output_file(output_file_path, cout_buf)) {
             return false;
