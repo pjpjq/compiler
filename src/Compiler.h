@@ -5,17 +5,16 @@
 #ifndef COMPILER_COMPILER_H
 #define COMPILER_COMPILER_H
 
+#include <iostream>
 #include <fstream>
 #include <string>
+#include <cassert>
+#include <chrono>
+#include <sstream>
+#include <vector>
 
 #include "Lexer.h"
-
-extern std::fstream source_file;
-extern char cur_ch;
-extern std::string buffer;
-extern Token cur_token;
-extern int line_count;
-extern int n_errors;
+#include "Parser.h"
 
 void init_compiler();
 
@@ -27,7 +26,7 @@ void init_compiler();
  * @return
  */
 bool compile(const std::string &source_file_path, const std::string &output_file_path = "",
-            bool output_file_and_std = true);
+             bool output_file_and_std = true);
 
 bool redirect_cout(const std::string &output_file_path);
 

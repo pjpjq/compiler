@@ -1,13 +1,13 @@
 const char c = 'c';
 const int MAX_N = 123456, MIN_N = -12345777, ZERO = 0;
-const char C = 'C', space = ' ';
+const char C = 'C';
 
-char underscore = '_';
-int dp[MAX_N];
+char underscore;
+int dp[20];
 int ans;
 int precomputed;
 int has_error;
-char number_char = '1';
+char number_char;
 
 void no_statement(int i, int j) {
     const char S = 'S';
@@ -29,6 +29,7 @@ void dummy_test() {
     i = i / 1;
     j = -1 * j;
     i = -0;
+    j = 'a' + 1;
 
     ;;
     { ; }
@@ -44,7 +45,7 @@ void dummy_test() {
         i = i - 1;
         j = j + 1;
     } while (i > j)
-
+    ;
     for (i = j; i >= 0; i = i - 1) {}
 
     no_statement(i, j);
@@ -105,19 +106,5 @@ void main() {
     dummy_test();
     precompute();
     scanf(n_tests);
-    for (i = 0; i < n_tests; i = i + 1) {
-        printf("Input a number n: ");
-        scanf(n);
-        has_error = 0;
-        ans_rec = fibonacci_recursive(n);
-        ans_dp = fibonacci_dp(n);
-        if (has_error == 0) {
-            if (ans_rec != ans_dp) {
-                printf("One of the fib function is buggy on input ", n);
-            } else {
-                printf("fib(", n);
-                printf(") = ", ans_rec);
-            }
-        }
-    }
+
 }

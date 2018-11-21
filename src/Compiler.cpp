@@ -2,24 +2,28 @@
 // Created by monotasker on 2018/11/13.
 //
 
-#include <iostream>
 #include "Compiler.h"
 
-std::fstream source_file;
 std::fstream output_file;
+
+std::string source_file_str;
+
+int cur_ch_idx;
 char cur_ch;
-std::string buffer;
-Token cur_token;
+std::string token_buffer;
 int line_count;
 int n_errors;
-int n_tokens;
+std::vector<Token> tokens;
+int cur_token_idx;
 
 void init_compiler() {
+    cur_ch_idx = 0;
     cur_ch = '0';
-    buffer = "";
+    token_buffer = "";
     line_count = 1;
     n_errors = 0;
-    n_tokens = 0;
+    tokens.clear();
+    cur_token_idx = 0;
 }
 
 bool redirect_cout(const std::string &output_file_path) {
@@ -47,13 +51,21 @@ bool cout_output_file(const std::string &output_file_path, std::streambuf *cout_
     return true;
 }
 
+void print_compiler_results() {
+    std::cout << std::endl << "Finished compilation with " << n_errors << " errors!" << std::endl;
+}
+
 bool compile(const std::string &source_file_path, const std::string &output_file_path,
              bool output_file_and_std) {
-    source_file = std::fstream(source_file_path, std::ios::in);
+    /* 把源文件存在 string 里 */
+    std::ifstream source_file(source_file_path);
     if (!source_file.is_open()) {
-        std::cout << "[ERROR] " << source_file_path << " doesn't exist!" << std::endl;
+        std::cout << "[ERROR] " << source_file_path << " cannot be opened!" << std::endl;
         return false;
     }
+    std::stringstream ss;
+    ss << source_file.rdbuf();
+    source_file_str = ss.str();
     
     /* 输出路径非空就输出到文件 */
     std::streambuf *cout_buf = std::cout.rdbuf();
@@ -63,12 +75,32 @@ bool compile(const std::string &source_file_path, const std::string &output_file
         }
     }
     
+    /* -----------------------------------开始计时. -------------------------------------------*/
+    auto start = std::chrono::high_resolution_clock::now();
+    
     init_compiler();
-    while (!source_file.eof()) {
-        cur_token = fetch_token();
-        ++n_tokens;
-        std::cout << n_tokens << " " << cur_token.get_output_string() << " in line " << line_count << std::endl;
-    }
+    /* Parse the source program. */
+    parse_program();
+    print_compiler_results();
+    
+    /* -----------------------------------停止计时. -------------------------------------------*/
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Compiled in: " << duration.count() << " microseconds." << std::endl;
+    
+    /* 测试 peek_token() */
+//    bool print_tokens = false;
+//    for (int i = 0; i < 5; ++i) {
+//    while (!source_file.eof()) {
+//        fetch_token();
+//        Token next_token = peek_token();
+//        std::cout << n_tokens << " " << next_token.get_output_string() << " in line " << line_count << std::endl;
+//        assert(next_token.get_output_string() == cur_token.get_output_string());
+//        std::cout << n_tokens << " " << cur_token.get_output_string() << " in line " << line_count << std::endl;
+//        if (print_tokens) {
+//            std::cout << n_tokens << " " << cur_token.get_output_string() << " in line " << line_count << std::endl;
+//        }
+//    }
     
     /* 输出到文件以及 stdout */
     if (!output_file_path.empty() && output_file_and_std) {
