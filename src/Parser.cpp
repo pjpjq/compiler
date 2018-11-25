@@ -1013,10 +1013,10 @@ bool parse_program() {
         }
     }
     
-    /* 分析之后的至少有 void main() 的函数 */
+    /* 分析之后的至少包括 void main() 的函数 */
     bool reached_main = false;
     int n_functions = 1;
-    const int MAX_N_FUNCTIONS_LIMIT = 123;
+    const int MAX_N_FUNCTIONS_LIMIT = 12345;
     while (tokens[cur_token_idx].get_val_string() == INT_SYM || tokens[cur_token_idx].get_val_string() == CHAR_SYM ||
            tokens[cur_token_idx].get_val_string() == VOID_SYM) {
         if (tokens[cur_token_idx + 1].get_val_string() == MAIN_SYM) {
@@ -1041,6 +1041,7 @@ bool parse_program() {
         }
         ++n_functions;
         if (n_functions > MAX_N_FUNCTIONS_LIMIT || cur_token_idx >= tokens.size() - 1) {
+            error_message("Exceed max number of functions limit " + std::to_string(MAX_N_FUNCTIONS_LIMIT) + "!");
             break;
         }
     }
