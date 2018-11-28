@@ -39,7 +39,7 @@ bool parse_integer() {
 bool parse_const_definition() {
     bool is_correct_const_definition = true;
     if (tokens[cur_token_idx].get_val_string() != INT_SYM && tokens[cur_token_idx].get_val_string() != CHAR_SYM) {
-        error_message("Constant definition should begin with \"int\"/\"char\", instead got: " +
+        error_message("Constant definition should begin with int or char, instead got: " +
                       tokens[cur_token_idx].get_val_string());
         is_correct_const_definition = false;
     }
@@ -1007,8 +1007,7 @@ bool parse_program() {
                 is_correct_program = false;
             }
         } else {
-            error_message("Expected \"(\" or \"[\" or \";\" or \",\", instead got: " +
-                          tokens[cur_token_idx].get_val_string());
+            error_message("Expected ( or [ or , or ; instead got: " + tokens[cur_token_idx].get_val_string());
             is_correct_program = false;
         }
     }
@@ -1040,7 +1039,7 @@ bool parse_program() {
             break;
         }
         ++n_functions;
-        if (n_functions > MAX_N_FUNCTIONS_LIMIT || cur_token_idx >= tokens.size() - 1) {
+        if (n_functions > MAX_N_FUNCTIONS_LIMIT || cur_token_idx >= tokens.size()) {
             error_message("Exceed max number of functions limit " + std::to_string(MAX_N_FUNCTIONS_LIMIT) + "!");
             break;
         }

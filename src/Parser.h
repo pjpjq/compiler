@@ -131,7 +131,7 @@ bool parse_term();
 bool parse_factor();
 
 /**
- * ＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
+ * ＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')' // TODO 封装到函数里
  * @return
  */
 //bool parse_funtion_call();

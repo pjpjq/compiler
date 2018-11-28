@@ -3,4 +3,4 @@ project(compiler)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(compiler src/main.cpp src/Lexer.cpp src/Lexer.h src/Compiler.cpp src/Compiler.h)
+add_executable(compiler src/main.cpp src/Lexer.cpp src/Lexer.h src/Compiler.cpp src/Compiler.h src/Parser.cpp src/Parser.h src/constants.h)
