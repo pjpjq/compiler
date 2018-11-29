@@ -628,7 +628,6 @@ bool parse_printf_statement() {
         error_message("Expected ( after printf, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_printf_statement = false;
     }
-    
     ++cur_token_idx;
     if (tokens[cur_token_idx].get_output_type() == STRING) { /* ×Ö·û´® */
         ++cur_token_idx;

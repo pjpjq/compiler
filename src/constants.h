@@ -62,4 +62,5 @@ static std::unordered_set<std::string> SEPARATOR_SET{PLUS_SYM, MINUS_SYM, MUL_SY
                                                      LPARENTHESIS_SYM, RPARENTHESIS_SYM, LBRACKET_SYM,
                                                      RBRACKET_SYM, LBRACE_SYM, RBRACE_SYM};
 
+
 #endif //COMPILER_CONSTANTS_H

@@ -1,7 +1,7 @@
 //
 // Created by monotasker on 2018/11/18.
 //
-// 每个 parse 结束时都要准备一个 token 即调用 fetch_token()
+// 每个 parse 结束时都要准备一个 token: ++cur_token_idx, 或者调 parse_xxx()
 //
 
 #ifndef COMPILER_PARSER_H

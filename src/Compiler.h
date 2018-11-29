@@ -15,6 +15,8 @@
 
 #include "Lexer.h"
 #include "Parser.h"
+#include "SymbolTable.h"
+#include "utils.h"
 
 void init_compiler();
 

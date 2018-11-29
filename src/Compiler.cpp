@@ -16,6 +16,11 @@ int n_errors;
 std::vector<Token> tokens;
 int cur_token_idx;
 
+/* ·ûºÅ±í */
+ConstantTable global_constant_table;
+VariableTable global_variable_table;
+FunctionTable function_table;
+
 void init_compiler() {
     cur_ch_idx = 0;
     cur_ch = '0';
@@ -24,6 +29,10 @@ void init_compiler() {
     n_errors = 0;
     tokens.clear();
     cur_token_idx = 0;
+    
+    global_constant_table.clear();
+    global_variable_table.clear();
+    function_table.clear();
 }
 
 bool redirect_cout(const std::string &output_file_path) {
