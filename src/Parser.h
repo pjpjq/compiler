@@ -7,7 +7,12 @@
 #ifndef COMPILER_PARSER_H
 #define COMPILER_PARSER_H
 
+#include <cassert>
+
+#include "constants.h"
 #include "Lexer.h"
+#include "utils.h"
+#include "SymbolTable.h"
 
 extern std::string source_file_str;
 extern std::string token_buffer;
@@ -18,15 +23,17 @@ extern int cur_token_idx;
 /**
  * 分析是不是无符号整数
  * ＜无符号整数＞  ::= ＜非零数字＞｛＜数字＞｝｜０
- * @return
+ * @param res 无符号数结果
+ * @return 判断结果
  */
-bool parse_unsigned_integer();
+bool parse_unsigned_integer(int &res);
 
 /**
  * 从 "+", "-", 或第一位数字 开始分析整数
- * @return
+ * @param res 有符号数结果
+ * @return 判断结果
  */
-bool parse_integer();
+bool parse_integer(int &res);
 
 /**
  * 从 "const" 后面的 int 或者 char 开始分析常量定义
@@ -42,7 +49,6 @@ bool parse_const_definition();
  * @return
  */
 bool parse_const_declarations();
-
 
 /**
  *
@@ -131,10 +137,11 @@ bool parse_term();
 bool parse_factor();
 
 /**
- * ＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')' // TODO 封装到函数里
+ *  // TODO: 要区分有无返回值吗???
+ * ＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
  * @return
  */
-//bool parse_funtion_call();
+bool parse_funtion_call();
 
 /**
  * ＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
