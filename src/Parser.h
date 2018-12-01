@@ -114,25 +114,29 @@ bool parse_loop_statement(const std::string &function_name);
  * ＜表达式＞    ::= ［＋｜－］＜项＞{＜加法运算符＞＜项＞}   //[+|-]只作用于第一个<项>
  * @return
  */
-bool parse_expression(const std::string &function_name);
+bool parse_expression(const std::string &function_name, bool &is_res_imm, int &res_val, std::string &res_temp_var,
+                      SymbolType &res_type);
 
 /**
  * ＜条件＞    ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞ //表达式为0条件为假，否则为真
  * @return
  */
-bool parse_condition(const std::string &function_name);
+bool parse_condition(const std::string &function_name, bool &is_res_imm, int &res_val, std::string &res_temp_var,
+                     SymbolType &res_type);
 
 /**
  * ＜项＞     ::= ＜因子＞{＜乘法运算符＞＜因子＞}
  * @return
  */
-bool parse_term(const std::string &function_name);
+bool parse_term(const std::string &function_name, bool &is_res_imm, int &res_val, std::string &res_temp_var,
+                SymbolType &res_type);
 
 /**
  * ＜因子＞    ::= ＜标识符＞｜＜标识符＞'['＜表达式＞']'｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞|'('＜表达式＞')’
  * @return
  */
-bool parse_factor(const std::string &function_name);
+bool parse_factor(const std::string &function_name, bool &is_res_imm, int &res_val, std::string &res_temp_var,
+                  SymbolType &res_type);
 
 /**
  *  // TODO: 要区分有无返回值吗???
@@ -145,7 +149,7 @@ bool parse_funtion_call(const std::string &function_name);
  * ＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
  * @return
  */
-bool parse_value_parameters(const std::string &function_name);
+bool parse_value_parameters(const std::string &function_name, const std::string &callee);
 
 /**
  * ＜读语句＞    ::=  scanf '('＜标识符＞{,＜标识符＞}')'
