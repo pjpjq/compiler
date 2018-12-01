@@ -76,7 +76,7 @@ bool parse_non_void_function_definition();
  * ＜参数表＞    ::= ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
  * @return
  */
-bool parse_parameter_list();
+bool parse_parameter_list(const std::string &function_name);
 
 /**
  * ＜复合语句＞   ::=  ［＜常量说明＞］［＜变量说明＞］｛＜语句＞｝
@@ -89,21 +89,21 @@ bool parse_block(const std::string &function_name);
 ?                      |＜无返回值函数调用语句＞;｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜空＞;｜＜返回语句＞;
  * @return
  */
-bool parse_statements();
+bool parse_statements(const std::string &function_name);
 
 /**
  *
  * ＜条件语句＞  ::=  if '('＜条件＞')'＜语句＞［else＜语句＞］
  * @return
  */
-bool parse_conditional_statement();
+bool parse_conditional_statement(const std::string &function_name);
 
 /**
  * ＜循环语句＞   ::=  do＜语句＞while '('＜条件＞')' |
  *                   for'('＜标识符＞＝＜表达式＞;＜条件＞;＜标识符＞＝＜标识符＞(+|-)＜无符号整数＞ ')'＜语句＞
  * @return
  */
-bool parse_loop_statement();
+bool parse_loop_statement(const std::string &function_name);
 /**
  * ＜赋值语句＞   ::=  ＜标识符＞＝＜表达式＞|＜标识符＞'['＜表达式＞']'=＜表达式＞
  * @return
@@ -114,50 +114,50 @@ bool parse_loop_statement();
  * ＜表达式＞    ::= ［＋｜－］＜项＞{＜加法运算符＞＜项＞}   //[+|-]只作用于第一个<项>
  * @return
  */
-bool parse_expression();
+bool parse_expression(const std::string &function_name);
 
 /**
  * ＜条件＞    ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞ //表达式为0条件为假，否则为真
  * @return
  */
-bool parse_condition();
+bool parse_condition(const std::string &function_name);
 
 /**
  * ＜项＞     ::= ＜因子＞{＜乘法运算符＞＜因子＞}
  * @return
  */
-bool parse_term();
+bool parse_term(const std::string &function_name);
 
 /**
  * ＜因子＞    ::= ＜标识符＞｜＜标识符＞'['＜表达式＞']'｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞|'('＜表达式＞')’
  * @return
  */
-bool parse_factor();
+bool parse_factor(const std::string &function_name);
 
 /**
  *  // TODO: 要区分有无返回值吗???
  * ＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
  * @return
  */
-bool parse_funtion_call();
+bool parse_funtion_call(const std::string &function_name);
 
 /**
  * ＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
  * @return
  */
-bool parse_value_parameters();
+bool parse_value_parameters(const std::string &function_name);
 
 /**
  * ＜读语句＞    ::=  scanf '('＜标识符＞{,＜标识符＞}')'
  * @return
  */
-bool parse_scanf_statement();
+bool parse_scanf_statement(const std::string &function_name);
 
 /**
  * ＜写语句＞    ::=  printf'('＜字符串＞,＜表达式＞')'|printf '('＜字符串＞')'|printf '('＜表达式＞')'
  * @return
  */
-bool parse_printf_statement();
+bool parse_printf_statement(const std::string &function_name);
 
 /**
  * ＜无返回值函数定义＞  ::= void＜标识符＞'('＜参数表＞')''{'＜复合语句＞'}’
