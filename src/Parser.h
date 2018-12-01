@@ -7,18 +7,11 @@
 #ifndef COMPILER_PARSER_H
 #define COMPILER_PARSER_H
 
-#include <cassert>
-
 #include "constants.h"
 #include "Lexer.h"
 #include "utils.h"
 #include "SymbolTable.h"
-
-extern std::string source_file_str;
-extern std::string token_buffer;
-extern int line_count;
-extern int n_errors;
-extern int cur_token_idx;
+#include "IR.h"
 
 /**
  * 分析是不是无符号整数
@@ -36,19 +29,21 @@ bool parse_unsigned_integer(int &res);
 bool parse_integer(int &res);
 
 /**
- * 从 "const" 后面的 int 或者 char 开始分析常量定义
+ *  从 "const" 后面的 int 或者 char 开始分析常量定义
  * ＜常量定义＞   ::=   int＜标识符＞＝＜整数＞{,＜标识符＞＝＜整数＞}
  *                          | char＜标识符＞＝＜字符＞{,＜标识符＞＝＜字符＞}
+ * @param function_name 空就是全局, 非空就是给定的函数局部
  * @return
  */
-bool parse_const_definition();
+bool parse_const_definition(const std::string &function_name = "");
 
 /**
  * 从 "const" 开始分析常量声明
  * ＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}
+ * @param function_name 空就是全局, 非空就是给定的函数局部
  * @return
  */
-bool parse_const_declarations();
+bool parse_const_declarations(const std::string &function_name = "");
 
 /**
  *
@@ -56,16 +51,19 @@ bool parse_const_declarations();
  * {,(＜标识符＞|＜标识符＞'['＜无符号整数＞']') }
  *
  * //＜无符号整数＞表示数组元素的个数，其值需大于0
+ * @param function_name 空就是全局, 非空就是给定的函数局部
  * @return
  */
-bool parse_variable_definition();
+bool parse_variable_definition(const std::string &function_name = "");
 
 /**
  *
  * ＜变量说明＞  ::= ＜变量定义＞;{＜变量定义＞;}
+ *
+ * @param function_name 空就是全局, 非空就是给定的函数局部
  * @return
  */
-bool parse_variable_declarations();
+bool parse_variable_declarations(const std::string &function_name = "");
 
 /**
  * 从 "("  开始分析有返回值的函数
@@ -84,7 +82,7 @@ bool parse_parameter_list();
  * ＜复合语句＞   ::=  ［＜常量说明＞］［＜变量说明＞］｛＜语句＞｝
  * @return
  */
-bool parse_block();
+bool parse_block(const std::string &function_name);
 
 /**
  * ＜语句＞    ::= ＜条件语句＞｜＜循环语句＞| '{'｛＜语句＞｝'}'｜＜有返回值函数调用语句＞;
