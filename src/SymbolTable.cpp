@@ -145,6 +145,7 @@ bool insert_parameter(const std::string &function_name, const std::string &param
         return false;
     }
     get_function(function_name)->parameter_table[parameter_name] = new VariableSymbol(parameter_name, symbol_type, 0);
+    get_function(function_name)->parameter_types.push_back(symbol_type);
     return true;
 }
 
@@ -214,7 +215,7 @@ bool is_local_symbol(const std::string &function_name, const std::string &symbol
             is_local_variable(function_name, symbol_name));
 }
 
-bool is_valid_parameter_type(const std::string &function_name, const std::vector<SymbolType> &value_parameters) {
+bool is_matched_parameter_type(const std::string &function_name, const std::vector<SymbolType> &value_parameters) {
     return is_function(function_name) && get_function(function_name)->parameter_types == value_parameters;
 }
 

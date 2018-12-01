@@ -140,7 +140,7 @@ VariableSymbol *get_local_variable(const std::string &function_name, const std::
 
 bool is_local_symbol(const std::string &function_name, const std::string &symbol_name);
 
-bool is_valid_parameter_type(const std::string &function_name, const std::vector<SymbolType> &value_parameters);
+bool is_matched_parameter_type(const std::string &function_name, const std::vector<SymbolType> &value_parameters);
 
 
 #endif //COMPILER_SYMBOLTABLE_H
