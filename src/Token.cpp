@@ -24,6 +24,6 @@ std::string Token::get_val_string() {
     return token_val_string;
 }
 
-int Token::get_line_nbr() {
+int Token::get_line_num() {
     return line_nbr;
 }

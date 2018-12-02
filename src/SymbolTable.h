@@ -41,6 +41,12 @@ public:
     std::string get_name();
     
     SymbolType get_symbol_type();
+    
+    virtual int get_length();
+    
+    virtual bool is_array();
+    
+    virtual int get_value();
 
 private:
     std::string name;
@@ -51,9 +57,9 @@ class VariableSymbol : public Symbol {
 public:
     VariableSymbol(const std::string &name, SymbolType symbol_type, int length);
     
-    int get_length();
+    virtual int get_length() override;
     
-    bool is_array();
+    virtual bool is_array() override;
 
 private:
     int length;
@@ -63,7 +69,7 @@ class ConstantSymbol : public Symbol {
 public:
     ConstantSymbol(const std::string &name, SymbolType symbol_type, int value);
     
-    int get_value();
+    virtual int get_value() override;
 
 private:
     int value;
@@ -80,11 +86,14 @@ public:
     std::vector<SymbolType> parameter_types;
 private:
 };
+/* -----------------------------------------------------API --------------------------------------------------*/
 
 /**
  * 编译开始时清空各符号表
  */
 void init_symbol_tables();
+
+Symbol *get_non_function_symbol(const std::string &function_name, const std::string &symbol_name);
 
 /* --------------------------------------------------Global------------------------------------------------------------*/
 
@@ -140,7 +149,6 @@ VariableSymbol *get_local_variable(const std::string &function_name, const std::
 
 bool is_local_symbol(const std::string &function_name, const std::string &symbol_name);
 
-bool is_matched_parameter_type(const std::string &function_name, const std::vector<SymbolType> &value_parameters);
-
+bool is_matched_parameter_type(const std::string &callee, const std::vector<SymbolType> &value_parameters);
 
 #endif //COMPILER_SYMBOLTABLE_H

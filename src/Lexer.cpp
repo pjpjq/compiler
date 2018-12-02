@@ -5,7 +5,7 @@
 #include "Lexer.h"
 
 void fetch_char_skipping_spaces() {
-    const int MAX_LIMIT_N_CONSECUTIVE_SPACES = 1234567;
+    const int MAX_LIMIT_N_CONSECUTIVE_SPACES = 1234;
     int n_consecutive_spaces = 0;
     while (isspace(fetch_char()) && n_consecutive_spaces < MAX_LIMIT_N_CONSECUTIVE_SPACES) {
         ++n_consecutive_spaces;
@@ -28,7 +28,7 @@ char fetch_char() {
 
 void retract_char() {
     if (cur_ch_idx <= 0) {
-        error_message("Cannot retract_char: " + std::string{cur_ch});
+        error_message("Cannot retract_char: " + std::string{cur_ch}, line_count);
     }
     if (is_newline(cur_ch)) {
         --line_count;
@@ -129,7 +129,8 @@ Token fetch_token() {
             retract_char();
             if (token_buffer.size() >= MAX_N_DIGITS_INT) {
                 error_message(
-                        "Integer too large: " + token_buffer + "with length " + std::to_string(token_buffer.size()));
+                        "Integer too large: " + token_buffer + "with length " + std::to_string(token_buffer.size()),
+                        line_count);
             }
             tokens.push_back(Token(UNSIGNED_INTEGER, std::atoi(token_buffer.c_str()), token_buffer, line_count));
             return tokens.back();
@@ -145,12 +146,12 @@ Token fetch_token() {
                 tokens.push_back(Token(CHAR, token_buffer[0], token_buffer, line_count));
                 return tokens.back();
             } else {
-                error_message("Expected single quote, instead got " + std::string{cur_ch});
+                error_message("Expected single quote, instead got " + std::string{cur_ch}, line_count);
                 tokens.push_back(Token(UNKNOWN_TYPE, cur_ch, std::string{cur_ch}, line_count));
                 return tokens.back();
             }
         } else {
-            error_message("Invalid symbol for single quote char: " + std::string{cur_ch});
+            error_message("Invalid symbol for single quote char: " + std::string{cur_ch}, line_count);
             tokens.push_back(Token(UNKNOWN_TYPE, cur_ch, std::string{cur_ch}, line_count));
             return tokens.back();
         }
@@ -169,7 +170,7 @@ Token fetch_token() {
             tokens.push_back(Token(STRING, (int) token_buffer.size(), token_buffer, line_count));
             return tokens.back();
         } else {
-            error_message("Expected double quote, instead got " + std::string{cur_ch});
+            error_message("Expected double quote, instead got " + std::string{cur_ch}, line_count);
             tokens.push_back(Token(UNKNOWN_TYPE, cur_ch, std::string{cur_ch}, line_count));
             return tokens.back();
         }
@@ -195,7 +196,7 @@ Token fetch_token() {
             tokens.push_back(Token(SEPARATOR, token_buffer[0], token_buffer, line_count));
             return tokens.back();
         } else {
-            error_message("Expected \"=\" after \"!\", instead got " + std::string{cur_ch});
+            error_message("Expected \"=\" after \"!\", instead got " + std::string{cur_ch}, line_count);
             tokens.push_back(Token(UNKNOWN_TYPE, token_buffer[0], token_buffer, line_count));
             return tokens.back();
             
@@ -218,7 +219,7 @@ Token fetch_token() {
     }
     
     /* Shouldn't reach here! Report error. */
-    error_message("Unknown token type: " + std::string{cur_ch});
+    error_message("Unknown token type: " + std::string{cur_ch}, line_count);
     tokens.push_back(Token(UNKNOWN_TYPE, token_buffer[0], token_buffer, line_count));
     return tokens.back();
 }
@@ -226,10 +227,10 @@ Token fetch_token() {
 void tokenize() {
     while (cur_ch_idx < source_file_str.size() - 1) {
         fetch_token();
-    }
-//    for (auto &token: tokens) {
+//        Token token = fetch_token();
 //        std::cout << token.get_output_string() << std::endl;
-//    }
+    }
+//    for (auto &token: tokens) { std::cout << token.get_output_string() << std::endl; }
 }
 
 

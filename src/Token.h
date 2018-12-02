@@ -40,7 +40,7 @@ public:
     
     int get_val_int();
     
-    int get_line_nbr();
+    int get_line_num();
     
     std::string get_val_string();
 

@@ -7,6 +7,8 @@
 #ifndef COMPILER_PARSER_H
 #define COMPILER_PARSER_H
 
+#include <typeinfo>
+
 #include "constants.h"
 #include "Lexer.h"
 #include "utils.h"

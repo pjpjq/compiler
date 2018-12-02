@@ -15,6 +15,35 @@ void init_symbol_tables() {
     function_table.clear();
 }
 
+Symbol *get_non_function_symbol(const std::string &function_name, const std::string &symbol_name) {
+    if (!function_name.empty() && !is_function(function_name)) {
+        error_message("Invalid function_name passed in: " + function_name);
+        return nullptr;
+    }
+    if (is_parameter(function_name, symbol_name)) {
+        return get_parameter(function_name, symbol_name);
+    }
+    if (is_local_const(function_name, symbol_name)) {
+        return get_local_const(function_name, symbol_name);
+    }
+    if (is_local_variable(function_name, symbol_name)) {
+        return get_local_variable(function_name, symbol_name);
+    }
+    
+    if (is_global_const(symbol_name)) {
+        return get_global_const(symbol_name);
+    }
+    if (is_global_variable(symbol_name)) {
+        return get_global_variable(symbol_name);
+    }
+    if (is_function(symbol_name)) {
+        error_message("Trying to get a function as non-function symbol: " + symbol_name);
+    } else {
+        error_message("Trying to get an invalid symbol as non-function symbol: " + symbol_name);
+    }
+    return nullptr;
+}
+
 Symbol::Symbol(const std::string &name, SymbolType symbol_type) : name(name), symbol_type(symbol_type) {}
 
 std::string Symbol::get_name() {
@@ -23,6 +52,21 @@ std::string Symbol::get_name() {
 
 SymbolType Symbol::get_symbol_type() {
     return symbol_type;
+}
+
+int Symbol::get_length() {
+    error_message("Shouldn't be calling get_length()");
+    return -23333;
+}
+
+bool Symbol::is_array() {
+    error_message("Shouldn't be calling is_array()");
+    return false;
+}
+
+int Symbol::get_value() {
+    error_message("Shouldn't be calling get_value()");
+    return -233333333;
 }
 
 VariableSymbol::VariableSymbol(const std::string &name, SymbolType symbol_type, int length) :
@@ -73,7 +117,7 @@ LocalSymbolTable *get_function(const std::string &function_name) {
 }
 
 bool is_global_const(const std::string &const_name) {
-    return global_variable_table.count(const_name) > 0;
+    return global_constant_table.count(const_name) > 0;
 }
 
 bool insert_global_const(const std::string &const_name, SymbolType symbol_type, int value) {
@@ -215,7 +259,7 @@ bool is_local_symbol(const std::string &function_name, const std::string &symbol
             is_local_variable(function_name, symbol_name));
 }
 
-bool is_matched_parameter_type(const std::string &function_name, const std::vector<SymbolType> &value_parameters) {
-    return is_function(function_name) && get_function(function_name)->parameter_types == value_parameters;
+bool is_matched_parameter_type(const std::string &callee, const std::vector<SymbolType> &value_parameters) {
+    return is_function(callee) && get_function(callee)->parameter_types == value_parameters;
 }
 

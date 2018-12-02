@@ -11,7 +11,6 @@
 #include <unordered_set>
 #include <iostream>
 #include <fstream>
-#include <cassert>
 #include <vector>
 
 #include "constants.h"

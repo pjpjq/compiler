@@ -10,6 +10,18 @@
 
 /* 整数最长10位数 */
 const int MAX_N_DIGITS_INT = 10;
+/* 最大函数数目限制 */
+const int MAX_N_FUNCTIONS_LIMIT = 12345;
+/* 最大参数数目限制 */
+const int MAX_N_PARAMETERS_LIMIT = 20;
+/* 最大语句数目限制 */
+const int MAX_N_STATEMENTS_LIMIT = 123456;
+/* 最大变量定义数目限制 */
+const int MAX_N_VAR_DEFINITIONS = 12345;
+/* 一个表达式里最多连续的项 */
+const int MAX_N_TERMS_PER_EXPRESSION = 12345;
+/* 一个项里最多连续的因子数 */
+const int MAX_N_FACTORS_PER_TERM = 2345;
 
 /* keywords 共同为一类 */
 static std::string CONST_SYM = "const";
@@ -62,5 +74,28 @@ static std::unordered_set<std::string> SEPARATOR_SET{PLUS_SYM, MINUS_SYM, MUL_SY
                                                      LPARENTHESIS_SYM, RPARENTHESIS_SYM, LBRACKET_SYM,
                                                      RBRACKET_SYM, LBRACE_SYM, RBRACE_SYM};
 
+/**
+ * 四元式的运算, 末尾加空格使之不能被作为标识符
+ */
+static std::string DECLARE_FUNCTION_OP = "declare_function ";
+static std::string DEFINE_PARAMETER_OP = "define_parameter ";
+static std::string PUSH_PARAMETER_OP = "push_parameter ";
+static std::string CALL_FUNCTION_OP = "call_function ";
+static std::string ASSIGN_RETURN_VAL_OP = "assign_return_val ";
+static std::string ASSIGN_OP = "assign_ ";
+static std::string RETURN_OP = "return ";
+static std::string DECLARE_VARIABLE_OP = "declare_variable ";
+//static std::string DECLARE_CONST_OP = "declare_const ";
+static std::string JUMP_OP = "jump ";
+static std::string BZ_OP = "bz ";
+static std::string BNZ_OP = "bnz ";
+static std::string SCANF_OP = "scanf ";
+static std::string PRINTF_OP = "printf ";
+static std::string READ_ARRAY_OP = "read_array ";
+static std::string WRITE_ARRAY_OP = "write_array ";
+static std::string LABEL_OP = "label_op ";
+static std::string EXIT_OP = "exit ";
+/* printf 的四元式里的一种类型 */
+static std::string PRINTF_STRING_TYPE_SYM = "string";
 
 #endif //COMPILER_CONSTANTS_H
