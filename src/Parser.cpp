@@ -385,7 +385,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": finish correct ; statement!" << std::endl;
         return is_correct_statements;
     }
-    
+    /* return */
     if (tokens[cur_token_idx].get_val_string() == RETURN_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         ++cur_token_idx;
         if (tokens[cur_token_idx].get_val_string() == SEMICOLON_SYM &&
@@ -434,8 +434,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         return is_correct_statements;
     }
-    
-    // TODO scanf
+    /* scanf */
     if (tokens[cur_token_idx].get_val_string() == SCANF_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         if (!parse_scanf_statement(function_name)) {
             error_message("Invalid scanf statement!");
@@ -443,8 +442,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message(
-                    "; is expected after scanf statement! Instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("; is expected after scanf statement, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
         }
         ++cur_token_idx;
@@ -454,8 +452,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         return is_correct_statements;
     }
-    
-    // TODO printf
+    /* printf */
     if (tokens[cur_token_idx].get_val_string() == PRINTF_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         if (!parse_printf_statement(function_name)) {
             error_message("Invalid printf statement! Instead got: " + tokens[cur_token_idx].get_val_string());
@@ -463,8 +460,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message(
-                    "; is expected after printf statement! Instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("; is expected after printf statement, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
         }
         ++cur_token_idx;
@@ -474,9 +470,9 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         return is_correct_statements;
     }
-    
+    /* ∏≥÷µ”Ôæ‰ */
     if (tokens[cur_token_idx].get_output_type() == IDENTIFIER &&
-        tokens[cur_token_idx + 1].get_val_string() != LPARENTHESIS_SYM) { /* ∏≥÷µ”Ôæ‰ */
+        tokens[cur_token_idx + 1].get_val_string() != LPARENTHESIS_SYM) {
         ++cur_token_idx;
         bool is_write_to_array = false;
         if (tokens[cur_token_idx].get_val_string() == LBRACKET_SYM) { /*  ˝◊È‘™Àÿ∏≥÷µ */
@@ -499,15 +495,13 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
             /* ] */
             if (tokens[cur_token_idx].get_val_string() != RBRACKET_SYM ||
                 tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-                error_message("] is expected in assignment statement! Instead got: " +
-                              tokens[cur_token_idx].get_val_string());
+                error_message("] is expected in assignment statement, not: " + tokens[cur_token_idx].get_val_string());
                 is_correct_statements = false;
             }
             ++cur_token_idx;
         }
         if (tokens[cur_token_idx].get_val_string() != ASSIGN_SYM) {
-            error_message(
-                    "= is expected in assignment statement! Instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("= is expected in assignment statement, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
         }
         if (tokens[cur_token_idx].get_output_type() != SEPARATOR) {
@@ -525,25 +519,22 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
             error_message("Invalid expression in assignment copyee part!");
             is_correct_statements = false;
         }
-        
         /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message(
-                    "; is expected after assignment statement! Instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("; is expected after assignment statement, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
         }
         ++cur_token_idx;
-        
         if (is_correct_statements) {
             std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": finish correct assignment statement!"
                       << std::endl;
         }
         return is_correct_statements;
     }
-    
+    /* ∫Ø ˝µ˜”√ */
     if (tokens[cur_token_idx].get_output_type() == IDENTIFIER &&
-        tokens[cur_token_idx + 1].get_val_string() == LPARENTHESIS_SYM) { /* ∫Ø ˝µ˜”√ */
+        tokens[cur_token_idx + 1].get_val_string() == LPARENTHESIS_SYM) {
         if (!parse_funtion_call(function_name)) {
             error_message("Invalid function call in function-call statement!");
             is_correct_statements = false;
@@ -561,7 +552,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         return is_correct_statements;
     }
-    
+    /* if */
     if (tokens[cur_token_idx].get_val_string() == IF_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         if (!parse_conditional_statement(function_name)) {
             error_message("Invalid conditional statement!");
@@ -573,7 +564,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         return is_correct_statements;
     }
-    
+    /* do while / for */
     if ((tokens[cur_token_idx].get_val_string() == DO_SYM || tokens[cur_token_idx].get_val_string() == FOR_SYM) &&
         tokens[cur_token_idx].get_output_type() == KEYWORD) {
         if (!parse_loop_statement(function_name)) {
@@ -586,7 +577,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
         }
         return is_correct_statements;
     }
-    
+    /* compound */
     if (tokens[cur_token_idx].get_val_string() == LBRACE_SYM &&
         tokens[cur_token_idx].get_output_type() == SEPARATOR) {
         ++cur_token_idx;
@@ -615,7 +606,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ∏ƒ¿‡–Õ≈–∂œ, …
     return is_correct_statements;
 }
 
-bool parse_loop_statement(const std::string &function_name) {
+bool parse_loop_statement(const std::string &function_name) { //TODO
     bool is_correct_loop_statement = true;
     if (tokens[cur_token_idx].get_val_string() != DO_SYM && tokens[cur_token_idx].get_val_string() != FOR_SYM) {
         error_message(
@@ -761,121 +752,170 @@ bool parse_loop_statement(const std::string &function_name) {
     return is_correct_loop_statement;
 }
 
-bool parse_conditional_statement(const std::string &function_name) { //TODO
+bool parse_conditional_statement(const std::string &function_name) {
     bool is_correct_conditional_statement = true;
+    /* if */
     if (tokens[cur_token_idx].get_val_string() != IF_SYM || tokens[cur_token_idx].get_output_type() != KEYWORD) {
         error_message("Expected if in conditional statement, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_conditional_statement = false;
     }
     ++cur_token_idx;
+    /* ( */
     if (tokens[cur_token_idx].get_val_string() != LPARENTHESIS_SYM ||
         tokens[cur_token_idx].get_output_type() != SEPARATOR) {
         error_message("Expected ( in conditional statement, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_conditional_statement = false;
     }
     ++cur_token_idx;
-    
-    bool is_condition_imm;
+    /* condition */
+    bool is_condition_imm = true;
     int condition_val = -3333332;
-    std::string condition_temp_var = "-2333332";
+    std::string condition_temp_var = "[INVALID condition temp var]";
     SymbolType condition_type = UNKNOWN_SYMBOL_TYPE;
     if (!parse_condition(function_name, is_condition_imm, condition_val, condition_temp_var, condition_type)) {
         error_message("Invalid condition!");
         is_correct_conditional_statement = false;
     }
+    /* ≈–∂œΩ·π˚ */
+    std::string else_label = create_label(function_name, "else");
+    std::string done_if_label = create_label(function_name, "done_if");
+    if (is_condition_imm) {
+        if (condition_val == 0) { /* ∫„Œ™ºŸ, j µΩ else label */
+            emit(Quadruple(JUMP_OP, "", "", else_label));
+        }
+    } else { /* Œ™ºŸ ±Ã¯, º¥ bz µΩ else label */
+        emit(Quadruple(BZ_OP, condition_temp_var, "", else_label));
+    }
+    /* ) */
     if (tokens[cur_token_idx].get_val_string() != RPARENTHESIS_SYM ||
         tokens[cur_token_idx].get_output_type() != SEPARATOR) {
         error_message("Expected ) in conditional statement, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_conditional_statement = false;
     }
     ++cur_token_idx;
+    /* if true ∫Û”Ôæ‰ */
     if (!parse_statements(function_name)) {
-        error_message("Invalid statement in if!");
+        error_message("Invalid statement after if!");
         is_correct_conditional_statement = false;
     }
+    /* ÷Æ∫Û j done_if_label */
+    emit(Quadruple(JUMP_OP, "", "", done_if_label));
+    /* ø™“ª∏ˆ else label, À‰»ªø…ƒ‹√ª”– else */
+    emit(Quadruple(LABEL_OP, else_label, "", ""));
+    /* ø…—°µƒ else */
     if (tokens[cur_token_idx].get_val_string() == ELSE_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         ++cur_token_idx;
+        /* if false ∫Û”Ôæ‰ */
         if (!parse_statements(function_name)) {
-            error_message("Invalid statement in else!");
+            error_message("Invalid statement after else!");
             is_correct_conditional_statement = false;
         }
     }
+    /* ø™“ª∏ˆ done_if label */
+    emit(Quadruple(LABEL_OP, done_if_label, "", ""));
     return is_correct_conditional_statement;
 }
 
 bool parse_condition(const std::string &function_name, bool &is_res_imm, int &res_val, std::string &res_temp_var,
-                     SymbolType &res_type) { //TODO
+                     SymbolType &res_type) {
     bool is_correct_condition = true;
-    
-    /* Ãıº˛◊Û±ﬂ */
-    bool is_condition_left_imm;
-    int condition_left_val = 996;
-    std::string condition_left_temp_var = "996...";
-    SymbolType condition_left_type = UNKNOWN_SYMBOL_TYPE;
-    if (!parse_expression(function_name, is_condition_left_imm, condition_left_val, condition_left_temp_var,
-                          condition_left_type)) {
-        error_message("Invalid expression in condition");
+    /* ◊Û±ﬂ */
+    if (!parse_expression(function_name, is_res_imm, res_val, res_temp_var, res_type)) {
+        error_message("Invalid expression as condition left!");
         is_correct_condition = false;
     }
-    
     /* ø…—°µƒ±»Ωœ‘ÀÀ„∑˚ */
-    if ((tokens[cur_token_idx].get_val_string() == EQ_SYM || tokens[cur_token_idx].get_val_string() == NE_SYM ||
-         tokens[cur_token_idx].get_val_string() == LT_SYM || tokens[cur_token_idx].get_val_string() == GT_SYM ||
-         tokens[cur_token_idx].get_val_string() == LE_SYM || tokens[cur_token_idx].get_val_string() == GE_SYM) &&
+    std::string op = tokens[cur_token_idx].get_val_string();
+    if ((op == EQ_SYM || op == NE_SYM || op == LT_SYM || op == GT_SYM || op == LE_SYM || op == GE_SYM) &&
         tokens[cur_token_idx].get_output_type() == SEPARATOR) {
         ++cur_token_idx;
-        
         /* ”–±»Ωœ‘ÀÀ„∑˚æÕ”–”“±ﬂ */
-        bool is_condition_right_imm;
-        int condition_right_val = 1145;
+        bool is_condition_right_imm = false;
+        int condition_right_val = -1145;
         std::string condition_right_temp_var = "[INVALID right temp var]";
         SymbolType condition_right_type = UNKNOWN_SYMBOL_TYPE;
         if (!parse_expression(function_name, is_condition_right_imm, condition_right_val, condition_right_temp_var,
                               condition_right_type)) {
-            error_message("Invalid expression after comparison operators in condition");
+            error_message("Invalid expression as condition right!");
             is_correct_condition = false;
         }
+        /* ¥¶¿ÌΩ·π˚ */
+        if (is_res_imm) {
+            if (is_condition_right_imm) {/* ¡Ω±ﬂ∂º≥£ ˝ */
+                res_val = op == EQ_SYM ? res_val == condition_right_val :
+                          op == NE_SYM ? res_val != condition_right_val :
+                          op == LT_SYM ? res_val < condition_right_val :
+                          op == GT_SYM ? res_val > condition_right_val :
+                          op == LE_SYM ? res_val <= condition_right_val :
+                          op == GE_SYM ? res_val >= condition_right_val : -23333;
+                std::cout << "[Line " << tokens[cur_token_idx].get_line_num() << ": always " << res_val
+                          << " condition!]"
+                          << std::endl; // debug
+            } else { /* ◊Û÷™”“≤ª÷™ */
+                emit(Quadruple(op, std::to_string(res_val), condition_right_temp_var, res_temp_var));
+            }
+        } else {
+            if (is_condition_right_imm) { /* ◊Û≤ª÷™”“÷™ */
+                emit(Quadruple(op, res_temp_var, std::to_string(condition_right_val), res_temp_var));
+            } else { /* ∂º≤ª÷™ */
+                emit(Quadruple(op, res_temp_var, condition_right_temp_var, res_temp_var));
+            }
+        }
+        is_res_imm &= is_condition_right_imm;
     }
-    /* ¥¶¿ÌΩ·π˚ */
     return is_correct_condition;
 }
 
-bool parse_printf_statement(const std::string &function_name) { //TODO
+bool parse_printf_statement(const std::string &function_name) {
     bool is_correct_printf_statement = true;
+    /* printf */
     if (tokens[cur_token_idx].get_val_string() != PRINTF_SYM || tokens[cur_token_idx].get_output_type() != KEYWORD) {
         error_message("Expected printf, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_printf_statement = false;
     }
     ++cur_token_idx;
+    /* ( */
     if (tokens[cur_token_idx].get_val_string() != LPARENTHESIS_SYM ||
         tokens[cur_token_idx].get_output_type() != SEPARATOR) {
         error_message("Expected ( after printf, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_printf_statement = false;
     }
     ++cur_token_idx;
-    
-    /* ø…ƒ‹“™ ‰≥ˆµƒ±Ì¥Ô Ω */
-    bool is_printee_imm;
+    /* “™ ‰≥ˆµƒ±Ì¥Ô Ω */
+    bool is_printee_imm = false;
     int printee_val = 88888;
     std::string printee_temp_var = "[INVALID printee_temp_var]";
     SymbolType printee_type = UNKNOWN_SYMBOL_TYPE;
-    if (tokens[cur_token_idx].get_output_type() == STRING) { /* ◊÷∑˚¥Æ */
+    if (tokens[cur_token_idx].get_output_type() == STRING) { /*  «◊÷∑˚¥Æ */
+        emit(Quadruple(PRINTF_OP, PRINTF_STRING_TYPE_SYM, tokens[cur_token_idx].get_val_string(), ""));
         ++cur_token_idx;
         if (tokens[cur_token_idx].get_val_string() == COMMA_SYM &&
             tokens[cur_token_idx].get_output_type() == SEPARATOR) { /* ◊÷∑˚¥Æ∫Û√ÊΩ”“ª∏ˆ±Ì¥Ô Ω */
             ++cur_token_idx;
-            
             if (!parse_expression(function_name, is_printee_imm, printee_val, printee_temp_var, printee_type)) {
-                error_message("Invalid expression!");
+                error_message("Invalid expression after string in printf!");
                 is_correct_printf_statement = false;
             }
+            std::string printee_str = printee_temp_var;
+            if (is_printee_imm) {
+                printee_str = printee_type == CHAR_SYMBOL_TYPE ? std::string{(char) printee_val} : std::to_string(
+                        printee_val);
+            }
+            emit(Quadruple(PRINTF_OP, symbol_type_strs[printee_type], printee_str, ""));
         }
-    } else if (!parse_expression(function_name, is_printee_imm, printee_val, printee_temp_var,
-                                 printee_type)) { /* ÷ª”–±Ì¥Ô Ω */
-        error_message("Invalid expression!");
-        is_correct_printf_statement = false;
+    } else { /* ÷ª”–±Ì¥Ô Ω */
+        if (!parse_expression(function_name, is_printee_imm, printee_val, printee_temp_var, printee_type)) {
+            error_message("Invalid single expression in printf!");
+            is_correct_printf_statement = false;
+        }
+        std::string printee_str = printee_temp_var;
+        if (is_printee_imm) {
+            printee_str = printee_type == CHAR_SYMBOL_TYPE ? std::string{(char) printee_val} : std::to_string(
+                    printee_val);
+        }
+        emit(Quadruple(PRINTF_OP, symbol_type_strs[printee_type], printee_str, ""));
     }
-    
+    /* ) */
     if (tokens[cur_token_idx].get_val_string() != RPARENTHESIS_SYM ||
         tokens[cur_token_idx].get_output_type() != SEPARATOR) {
         error_message("Expected ) after printf, instead got: " + tokens[cur_token_idx].get_val_string());
@@ -885,34 +925,45 @@ bool parse_printf_statement(const std::string &function_name) { //TODO
     return is_correct_printf_statement;
 }
 
-bool parse_scanf_statement(const std::string &function_name) { //TODO
+bool parse_scanf_statement(const std::string &function_name) {
     bool is_correct_scanf_statement = true;
+    /* scanf */
     if (tokens[cur_token_idx].get_val_string() != SCANF_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         error_message("Expected scanf, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_scanf_statement = false;
     }
     ++cur_token_idx;
-    
+    /* ( */
     if (tokens[cur_token_idx].get_val_string() != LPARENTHESIS_SYM ||
         tokens[cur_token_idx].get_output_type() != SEPARATOR) {
         error_message("Expected (, instead got: " + tokens[cur_token_idx].get_val_string());
         is_correct_scanf_statement = false;
     }
-    ++cur_token_idx;
-    if (tokens[cur_token_idx].get_output_type() != IDENTIFIER) {
-        error_message("Expected identifier, instead got: " + tokens[cur_token_idx].get_val_string());
-        is_correct_scanf_statement = false;
-    }
-    ++cur_token_idx;
-    while (tokens[cur_token_idx].get_val_string() == COMMA_SYM &&
-           tokens[cur_token_idx].get_output_type() == SEPARATOR) {
+    /* ÷¡…Ÿ∂¡»Î“ª∏ˆ±‰¡ø */
+    int n_scanf_vars = 0;
+    do {
         ++cur_token_idx;
         if (tokens[cur_token_idx].get_output_type() != IDENTIFIER) {
             error_message("Expected identifier, instead got: " + tokens[cur_token_idx].get_val_string());
             is_correct_scanf_statement = false;
         }
+        Symbol *var = get_non_function_symbol(function_name, tokens[cur_token_idx].get_val_string());
+        if (!var) {
+            is_correct_scanf_statement = false;
+        } else if (typeid(*var).name() == typeid(ConstantSymbol).name()) {
+            error_message("Cannot scanf const: " + var->get_name());
+            is_correct_scanf_statement = false;
+        } else if (var->is_array()) {
+            error_message("Cannot scanf array: " + var->get_name());
+            is_correct_scanf_statement = false;
+        } else { /* …˙≥…∂¡±‰¡øÀƒ‘™ Ω */
+            emit(Quadruple(SCANF_OP, symbol_type_strs[var->get_symbol_type()], var->get_name(), ""));
+        }
         ++cur_token_idx;
-    }
+        ++n_scanf_vars;
+    } while (tokens[cur_token_idx].get_val_string() == COMMA_SYM &&
+             tokens[cur_token_idx].get_output_type() == SEPARATOR && n_scanf_vars < MAX_N_SCANF_VARS);
+    /* ) */
     if (tokens[cur_token_idx].get_val_string() != RPARENTHESIS_SYM ||
         tokens[cur_token_idx].get_output_type() != SEPARATOR) {
         error_message("Expected ) after scanf, instead got: " + tokens[cur_token_idx].get_val_string());
@@ -1481,8 +1532,7 @@ bool parse_program() {
     std::cout << "----------------------Optional Global Constant declarations----------------------" << std::endl;
     if (tokens[cur_token_idx].get_val_string() == CONST_SYM) { /*  «≥£¡ø…˘√˜ */
         if (tokens[cur_token_idx].get_output_type() != KEYWORD) {
-            error_message(
-                    "Got const but wrong type: " + token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
+            error_message("const in wrong type: " + token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
             is_correct_program = false;
         }
         if (!parse_const_declarations()) {
@@ -1534,8 +1584,8 @@ bool parse_program() {
         }
         if (tokens[cur_token_idx + 1].get_val_string() == MAIN_SYM) {
             if (tokens[cur_token_idx + 1].get_output_type() != KEYWORD) {
-                error_message("Got main symbol but as wrong type: " +
-                              token_output_type_strs[tokens[cur_token_idx + 1].get_output_type()]);
+                error_message(
+                        "main in wrong type " + token_output_type_strs[tokens[cur_token_idx + 1].get_output_type()]);
                 is_correct_program = false;
             }
             reached_main = true;
@@ -1543,12 +1593,12 @@ bool parse_program() {
         } else if (tokens[cur_token_idx + 1].get_output_type() == IDENTIFIER &&
                    tokens[cur_token_idx + 2].get_val_string() == LPARENTHESIS_SYM) {
             if (tokens[cur_token_idx + 2].get_output_type() != SEPARATOR) {
-                error_message("Got } symbol but as wrong type: " +
-                              token_output_type_strs[tokens[cur_token_idx + 2].get_output_type()]);
+                error_message("} in wrong type " + token_output_type_strs[tokens[cur_token_idx + 2].get_output_type()]);
                 is_correct_program = false;
             }
             if (reached_main) {
-                error_message("Last function should be main()!");
+                error_message("Last function should be main, got " + tokens[cur_token_idx + 1].get_val_string() +
+                              " after main!");
                 is_correct_program = false;
             }
             if (tokens[cur_token_idx].get_val_string() == VOID_SYM) {

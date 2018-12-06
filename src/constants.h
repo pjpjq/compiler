@@ -22,6 +22,8 @@ const int MAX_N_VAR_DEFINITIONS = 12345;
 const int MAX_N_TERMS_PER_EXPRESSION = 12345;
 /* 一个项里最多连续的因子数 */
 const int MAX_N_FACTORS_PER_TERM = 2345;
+/* 一句 scanf 最多 var 数 */
+const int MAX_N_SCANF_VARS = 1234;
 
 /* keywords 共同为一类 */
 static std::string CONST_SYM = "const";

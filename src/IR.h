@@ -12,6 +12,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
 #include "constants.h"
 #include "utils.h"
@@ -120,17 +121,17 @@ class Quadruple {
             }
             return out << "j " << quadruple.result;
         }
-        if (quadruple.op == BZ_OP) { /* result: label */
+        if (quadruple.op == BZ_OP) { /* left: var, result: label */
             if (!is_label(quadruple.result)) {
                 error_message("Quadruple bz_op expects label as result, instead got: " + quadruple.result);
             }
-            return out << "bz " << quadruple.result;
+            return out << "bz " << quadruple.left << " " << quadruple.result;
         }
-        if (quadruple.op == BNZ_OP) { /* result: label */
+        if (quadruple.op == BNZ_OP) { /* left, var, result: label */
             if (!is_label(quadruple.result)) {
                 error_message("Quadruple bnz_op expects label as result, instead got: " + quadruple.result);
             }
-            return out << "bnz " << quadruple.result;
+            return out << "bnz " << quadruple.left << " " << quadruple.result;
         }
         if (quadruple.op == SCANF_OP) { /* left: var type, right: var name */
             if (quadruple.left != INT_SYM && quadruple.left != CHAR_SYM) {
@@ -143,9 +144,10 @@ class Quadruple {
                 return out << "print " << quadruple.left << " " << quadruple.right;
             } else if (quadruple.left == PRINTF_STRING_TYPE_SYM) { /* left: string type, right: string val */
                 return out << "print " << quadruple.left << " " << quadruple.right;
+            } else {
+                error_message("Quadruple printf_op expects int/char/string as left, instead got: " + quadruple.left);
+                return out << "[ERROR] Invalid printf_op in quadruple" << quadruple.left;
             }
-            error_message("Quadruple printf_op expects int/char/string as left, instead got: " + quadruple.left);
-            return out << "[ERROR] Invalid printf_op in quadruple" << quadruple.left;
         }
         if (quadruple.op == READ_ARRAY_OP) { /* left: array_name, right: array_offset, result: getter */
             return out << quadruple.result << " = " << quadruple.left << "[" << quadruple.right << "]";

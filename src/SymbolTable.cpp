@@ -126,7 +126,7 @@ bool insert_global_const(const std::string &const_name, SymbolType symbol_type, 
         return false;
     }
     if (symbol_type != INT_SYMBOL_TYPE && symbol_type != CHAR_SYMBOL_TYPE) {
-        error_message("Global const should be int/char, got instead" + symbol_type_strs[symbol_type]);
+        error_message("Global const should be int/char, got instead: " + symbol_type_strs[symbol_type]);
         return false;
     }
     global_constant_table[const_name] = new ConstantSymbol(const_name, symbol_type, value);
@@ -151,7 +151,7 @@ bool insert_global_variable(const std::string &variable_name, SymbolType symbol_
         return false;
     }
     if (symbol_type != INT_SYMBOL_TYPE && symbol_type != CHAR_SYMBOL_TYPE) {
-        error_message("Global variable should be int/char, got instead" + symbol_type_strs[symbol_type]);
+        error_message("Global variable should be int/char, got instead: " + symbol_type_strs[symbol_type]);
         return false;
     }
     global_variable_table[variable_name] = new VariableSymbol(variable_name, symbol_type, length);
@@ -185,7 +185,7 @@ bool insert_parameter(const std::string &function_name, const std::string &param
         return false;
     }
     if (symbol_type != INT_SYMBOL_TYPE && symbol_type != CHAR_SYMBOL_TYPE) {
-        error_message("Function parameter should be int/char, got instead" + symbol_type_strs[symbol_type]);
+        error_message("Function parameter should be int/char, got instead: " + symbol_type_strs[symbol_type]);
         return false;
     }
     get_function(function_name)->parameter_table[parameter_name] = new VariableSymbol(parameter_name, symbol_type, 0);
