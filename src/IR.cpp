@@ -8,7 +8,7 @@ std::vector<int> labels;
 std::vector<int> temp_vars;
 std::vector<Quadruple> quadruples;
 
-const std::string &ir_fout_name = "./ir.txt";
+const std::string &ir_fout_name = "../outputs/ir.txt";
 std::ofstream ir_fout;
 
 void init_IR() {
@@ -26,6 +26,7 @@ void emit(Quadruple quadruple) {
     }
     if (FOUT_QUADRUPLE) {
         ir_fout << quadruple << std::endl;
+//        ir_fout << std::string{'c'} << std::endl;
     }
 }
 

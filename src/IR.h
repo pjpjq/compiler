@@ -5,7 +5,7 @@
 #ifndef COMPILER_IR_H
 #define COMPILER_IR_H
 
-#define COUT_QUADRUPLE 0
+#define COUT_QUADRUPLE 1
 #define FOUT_QUADRUPLE 1
 
 #include <vector>
@@ -114,12 +114,6 @@ class Quadruple {
             }
             return out;
         }
-//        if (quadruple.op == DECLARE_CONST_OP) {
-//            if (quadruple.left != INT_SYM && quadruple.left != CHAR_SYM) {
-//                error_message("Quadruple declare_const should begin with int/char, instead got: " + quadruple.left);
-//            }
-//            return out << "const " << quadruple.left << " " << quadruple.right << " = " << quadruple.result;
-//        }
         if (quadruple.op == JUMP_OP) { /* result: label */
             if (!is_label(quadruple.result)) {
                 error_message("Quadruple jump_op expects label as result, instead got: " + quadruple.result);
