@@ -24,6 +24,8 @@ const int MAX_N_TERMS_PER_EXPRESSION = 12345;
 const int MAX_N_FACTORS_PER_TERM = 2345;
 /* 一句 scanf 最多 var 数 */
 const int MAX_N_SCANF_VARS = 1234;
+/* 复合语句最多内部语句 */
+const int MAX_N_INNER_STATEMENTS = 2333;
 
 /* keywords 共同为一类 */
 static std::string CONST_SYM = "const";

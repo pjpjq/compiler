@@ -91,21 +91,21 @@ bool parse_block(const std::string &function_name);
 ?                      |＜无返回值函数调用语句＞;｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜空＞;｜＜返回语句＞;
  * @return
  */
-bool parse_statements(const std::string &function_name);
+bool parse_statements(const std::string &function_name, bool &has_return_statement);
 
 /**
  *
  * ＜条件语句＞  ::=  if '('＜条件＞')'＜语句＞［else＜语句＞］
  * @return
  */
-bool parse_conditional_statement(const std::string &function_name);
+bool parse_conditional_statement(const std::string &function_name, bool &has_return_statement);
 
 /**
  * ＜循环语句＞   ::=  do＜语句＞while '('＜条件＞')' |
  *                   for'('＜标识符＞＝＜表达式＞;＜条件＞;＜标识符＞＝＜标识符＞(+|-)＜无符号整数＞ ')'＜语句＞
  * @return
  */
-bool parse_loop_statement(const std::string &function_name);
+bool parse_loop_statement(const std::string &function_name, bool &has_return_statement);
 /**
  * ＜赋值语句＞   ::=  ＜标识符＞＝＜表达式＞|＜标识符＞'['＜表达式＞']'=＜表达式＞
  * @return

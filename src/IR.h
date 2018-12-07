@@ -99,8 +99,8 @@ class Quadruple {
         if (quadruple.op == ASSIGN_RETURN_VAL_OP) { /* result: 返回值赋值的变量 */
             return out << quadruple.result << " = RET";
         }
-        if (quadruple.op == ASSIGN_OP) {
-            return out << quadruple.result << " = " << quadruple.left;
+        if (quadruple.op == ASSIGN_OP) { /* left: assign left, right: assign right */
+            return out << quadruple.left << " = " << quadruple.right;
         }
         if (quadruple.op == RETURN_OP) { /* left: 返回的变量 */
             return out << "ret " << quadruple.left;

@@ -338,6 +338,10 @@ bool parse_parameter_list(const std::string &function_name) {
 }
 
 bool parse_block(const std::string &function_name) {
+    if (!is_function(function_name)) {
+        error_message("Undefined/No function name passed in block: " + function_name);
+        return false;
+    }
     bool is_correct_block = true;
     if (tokens[cur_token_idx].get_val_string() == CONST_SYM) {
         if (!parse_const_declarations(function_name)) {
@@ -353,13 +357,15 @@ bool parse_block(const std::string &function_name) {
         }
     }
     
+    bool has_return_statement = false;
     int n_statements = 0;
     while (tokens[cur_token_idx].get_val_string() != RBRACE_SYM && n_statements < MAX_N_STATEMENTS_LIMIT) {
-        if (!parse_statements(function_name)) {
+        if (!parse_statements(function_name, has_return_statement)) {
             error_message("Invalid statements!");
             is_correct_block = false;
             break;
         }
+        /* } */
         if (tokens[cur_token_idx].get_val_string() == RBRACE_SYM &&
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Got } in wrong type: " + token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
@@ -367,29 +373,41 @@ bool parse_block(const std::string &function_name) {
         }
         ++n_statements;
     }
+    /* ¼ì²é return */
+    if ((get_function(function_name)->get_symbol_type() == INT_SYMBOL_TYPE ||
+         get_function(function_name)->get_symbol_type() == CHAR_SYMBOL_TYPE) && !has_return_statement) {
+        error_message("No return statement in non-void function: " + function_name);
+        is_correct_block = false;
+    }
     if (is_correct_block) {
         std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": finish correct block!" << std::endl;
     }
     return is_correct_block;
 }
 
-bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, Éú³É¸÷ÖÖÓï¾äËÄÔªÊ½
+bool parse_statements(const std::string &function_name, bool &has_return_statement) {
     if (!is_function(function_name)) {
         error_message("Undefined/No function name passed in statements: " + function_name);
         return false;
     }
     bool is_correct_statements = true;
+    /* Ò»¸ö·ÖºÅµÄÓï¾ä */
     if (tokens[cur_token_idx].get_val_string() == SEMICOLON_SYM &&
-        tokens[cur_token_idx].get_output_type() == SEPARATOR) { /* Ò»¸ö·ÖºÅµÄÓï¾ä */
+        tokens[cur_token_idx].get_output_type() == SEPARATOR) {
         ++cur_token_idx;
         std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": finish correct ; statement!" << std::endl;
         return is_correct_statements;
     }
-    /* return */
+    /* return Óï¾ä */
     if (tokens[cur_token_idx].get_val_string() == RETURN_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
+        has_return_statement = true;
         ++cur_token_idx;
         if (tokens[cur_token_idx].get_val_string() == SEMICOLON_SYM &&
             tokens[cur_token_idx].get_output_type() == SEPARATOR) { /* return; Óï¾ä */
+            if (get_function(function_name)->get_symbol_type() != VOID_SYMBOL_TYPE) { /* ¼ì²é·µ»ØÀàÐÍ */
+                error_message("Non-void function got \"return ;\": " + function_name);
+                is_correct_statements = false;
+            }
             emit(Quadruple(RETURN_OP, "", "", ""));
             ++cur_token_idx;
             std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": finish correct return statement!"
@@ -403,7 +421,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
             is_correct_statements = false;
         }
         ++cur_token_idx;
-        
+        /* expression */
         bool is_return_val_imm;
         int return_val = -23333;
         std::string temp_var_to_return = "[INVALID temp_var_to_return !!!]";
@@ -412,8 +430,17 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
             error_message("Invalid expression!");
             is_correct_statements = false;
         }
-        emit(Quadruple(RETURN_OP, is_return_val_imm ? std::to_string(return_val) : temp_var_to_return, "", ""));
-        
+        if (get_function(function_name)->get_symbol_type() != return_type) { /* ¼ì²é·µ»ØÀàÐÍ */
+            error_message(
+                    "Function expects return type " + symbol_type_strs[get_function(function_name)->get_symbol_type()] +
+                    " , not " + symbol_type_strs[return_type]);
+            is_correct_statements = false;
+        }
+        std::string return_str = temp_var_to_return;
+        if (is_return_val_imm) {
+            return_str = return_type == INT_SYMBOL_TYPE ? std::to_string(return_val) : std::string{(char) return_val};
+        }
+        emit(Quadruple(RETURN_OP, return_str, "", ""));
         /* ) */
         if (tokens[cur_token_idx].get_val_string() != RPARENTHESIS_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
@@ -421,10 +448,10 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
             is_correct_statements = false;
         }
         ++cur_token_idx;
+        /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message(
-                    "; is expected after return statement! Instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("; is expected after return statement, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
         }
         ++cur_token_idx;
@@ -440,6 +467,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
             error_message("Invalid scanf statement!");
             is_correct_statements = false;
         }
+        /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("; is expected after scanf statement, not: " + tokens[cur_token_idx].get_val_string());
@@ -458,6 +486,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
             error_message("Invalid printf statement! Instead got: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
         }
+        /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("; is expected after printf statement, not: " + tokens[cur_token_idx].get_val_string());
@@ -470,28 +499,37 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
         }
         return is_correct_statements;
     }
-    /* ¸³ÖµÓï¾ä */
+    /* ÊÇ¸³ÖµÓï¾ä, ¿ÉÄÜÊý×éÔªËØ, Ò²¿ÉÄÜµ¥¸ö±äÁ¿ */
     if (tokens[cur_token_idx].get_output_type() == IDENTIFIER &&
         tokens[cur_token_idx + 1].get_val_string() != LPARENTHESIS_SYM) {
+        Symbol *var = get_non_function_symbol(function_name, tokens[cur_token_idx].get_val_string());
+        if (!var) {
+            return false;
+        } else if (typeid(*var).name() == typeid(ConstantSymbol).name()) {
+            error_message("Cannot assign to const: " + var->get_name());
+            is_correct_statements = false;
+        }
         ++cur_token_idx;
-        bool is_write_to_array = false;
-        if (tokens[cur_token_idx].get_val_string() == LBRACKET_SYM) { /* Êý×éÔªËØ¸³Öµ */
-            is_write_to_array = true;
+        std::string offset_str = "[INVALID offset_str]";
+        if (tokens[cur_token_idx].get_val_string() == LBRACKET_SYM) { /* ÊÇÊý×éÔªËØ¸³Öµ */
             if (tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-                error_message("Got ] but in wrong type: " + symbol_type_strs[tokens[cur_token_idx].get_output_type()]);
+                error_message("Got [ but in wrong type: " + symbol_type_strs[tokens[cur_token_idx].get_output_type()]);
                 is_correct_statements = false;
+            }
+            if (!var->is_array()) {
+                error_message("Use [ for single variable as assignment left: " + var->get_name());
             }
             ++cur_token_idx;
-            
-            bool is_offset_imm;
+            /* ´¦Àí offset */
+            bool is_offset_imm = false;
             int offset_val = -2333;
-            std::string offset_temp_var = "offset";
+            std::string offset_temp_var = "[INVALID offset val]";
             SymbolType offset_type = UNKNOWN_SYMBOL_TYPE;
             if (!parse_expression(function_name, is_offset_imm, offset_val, offset_temp_var, offset_type)) {
-                error_message("Invalid expression!");
+                error_message("Invalid expression as offset!");
                 is_correct_statements = false;
             }
-            
+            offset_str = is_offset_imm ? std::to_string(offset_val) : offset_temp_var;
             /* ] */
             if (tokens[cur_token_idx].get_val_string() != RBRACKET_SYM ||
                 tokens[cur_token_idx].get_output_type() != SEPARATOR) {
@@ -500,6 +538,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
             }
             ++cur_token_idx;
         }
+        /* = */
         if (tokens[cur_token_idx].get_val_string() != ASSIGN_SYM) {
             error_message("= is expected in assignment statement, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
@@ -509,15 +548,30 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
             is_correct_statements = false;
         }
         ++cur_token_idx;
-        
-        /* copyee */
-        bool is_copyee_imm;
-        int copyee_val = -23334444;
-        std::string copyee_temp_var = "copyee";
-        SymbolType copyee_type = UNKNOWN_SYMBOL_TYPE;
-        if (!parse_expression(function_name, is_copyee_imm, copyee_val, copyee_temp_var, copyee_type)) {
-            error_message("Invalid expression in assignment copyee part!");
+        /* assignment right */
+        bool is_right_imm;
+        int right_val = -23334444;
+        std::string right_temp_var = "[INVALID right_temp_var]";
+        SymbolType right_type = UNKNOWN_SYMBOL_TYPE;
+        if (!parse_expression(function_name, is_right_imm, right_val, right_temp_var, right_type)) {
+            error_message("Invalid expression in assignment right part!");
             is_correct_statements = false;
+        }
+        std::string right_str = right_temp_var;
+        if (is_right_imm) {
+            right_str = right_type == CHAR_SYMBOL_TYPE ? std::string{(char) right_val} : std::to_string(right_val);
+        }
+        /* ¼ì²éÀàÐÍÊÇ·ñÏàÍ¬ */
+        if (var->get_symbol_type() != right_type) {
+            error_message("Different type assignment, left: " + symbol_type_strs[var->get_symbol_type()] + ", right: " +
+                          symbol_type_strs[right_type]);
+            is_correct_statements = false;
+        }
+        /* Éú³É¸³ÖµËÄÔªÊ½ */
+        if (var->is_array()) {
+            emit(Quadruple(WRITE_ARRAY_OP, var->get_name(), offset_str, right_str));
+        } else {
+            emit(Quadruple(ASSIGN_OP, var->get_name(), right_str, ""));
         }
         /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
@@ -532,17 +586,17 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
         }
         return is_correct_statements;
     }
-    /* º¯Êýµ÷ÓÃ */
+    /* ÊÇº¯Êýµ÷ÓÃ, ËÄÔªÊ½ÔÚ parse_function_call ÀïÉú³É, ÕâÀï²»ÓÃÐ´ */
     if (tokens[cur_token_idx].get_output_type() == IDENTIFIER &&
         tokens[cur_token_idx + 1].get_val_string() == LPARENTHESIS_SYM) {
         if (!parse_funtion_call(function_name)) {
             error_message("Invalid function call in function-call statement!");
             is_correct_statements = false;
         }
+        /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message("; is expected after function call in function-call statement! Instead got: " +
-                          tokens[cur_token_idx].get_val_string());
+            error_message("; is expected after function call, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
         }
         ++cur_token_idx;
@@ -554,7 +608,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
     }
     /* if */
     if (tokens[cur_token_idx].get_val_string() == IF_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
-        if (!parse_conditional_statement(function_name)) {
+        if (!parse_conditional_statement(function_name, has_return_statement)) {
             error_message("Invalid conditional statement!");
             is_correct_statements = false;
         }
@@ -567,7 +621,7 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
     /* do while / for */
     if ((tokens[cur_token_idx].get_val_string() == DO_SYM || tokens[cur_token_idx].get_val_string() == FOR_SYM) &&
         tokens[cur_token_idx].get_output_type() == KEYWORD) {
-        if (!parse_loop_statement(function_name)) {
+        if (!parse_loop_statement(function_name, has_return_statement)) {
             error_message("Invalid loop statement!");
             is_correct_statements = false;
         }
@@ -577,20 +631,26 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
         }
         return is_correct_statements;
     }
-    /* compound */
+    /* compound statements: {...} */
     if (tokens[cur_token_idx].get_val_string() == LBRACE_SYM &&
         tokens[cur_token_idx].get_output_type() == SEPARATOR) {
         ++cur_token_idx;
         int n_inner_statements = 0;
-        const int MAX_N_INNER_STATEMENTS = 123456;
-        while ((tokens[cur_token_idx].get_val_string() != RBRACE_SYM ||
-                tokens[cur_token_idx].get_output_type() != SEPARATOR) && n_inner_statements < MAX_N_INNER_STATEMENTS) {
-            if (!parse_statements(function_name)) {
-                error_message("Invalid inner statements!");
+        while (tokens[cur_token_idx].get_val_string() != RBRACE_SYM && n_inner_statements < MAX_N_INNER_STATEMENTS) {
+            if (tokens[cur_token_idx].get_val_string() == RBRACE_SYM &&
+                tokens[cur_token_idx].get_output_type() != SEPARATOR) {
+                error_message("} in wrong type " + token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
+                is_correct_statements = false;
+                break;
+            }
+            /* inner statements */
+            ++n_inner_statements;
+            if (!parse_statements(function_name, has_return_statement)) {
+                error_message("Invalid inner statements (num " + std::to_string(n_inner_statements));
                 is_correct_statements = false;
             }
-            ++n_inner_statements;
         }
+        /* È·ÈÏ } */
         if (tokens[cur_token_idx].get_val_string() != RBRACE_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Expected } after compound statement, not: " + tokens[cur_token_idx].get_val_string());
@@ -606,41 +666,55 @@ bool parse_statements(const std::string &function_name) { // TODO: ¸ÄÀàÐÍÅÐ¶Ï, É
     return is_correct_statements;
 }
 
-bool parse_loop_statement(const std::string &function_name) { //TODO
+bool parse_loop_statement(const std::string &function_name, bool &has_return_statement) {
     bool is_correct_loop_statement = true;
     if (tokens[cur_token_idx].get_val_string() != DO_SYM && tokens[cur_token_idx].get_val_string() != FOR_SYM) {
-        error_message(
-                "Expected do or for to enter a loop statement, instead got: " + tokens[cur_token_idx].get_val_string());
+        error_message("Expected do/for to enter a loop statement, not: " + tokens[cur_token_idx].get_val_string());
         is_correct_loop_statement = false;
     }
-    
-    bool is_condition_imm;
+    /* Ìõ¼þ±äÁ¿ */
+    bool is_condition_imm = false;
     int condition_val = -23323233;
-    std::string condition_temp_var = "-233-233";
+    std::string condition_temp_var = "[INVALID condition_temp_var]";
     SymbolType condition_type = UNKNOWN_SYMBOL_TYPE;
     /* ÊÇ do while Ñ­»· */
     if (tokens[cur_token_idx].get_val_string() == DO_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
+        /* ¿ªÒ»¸ö enter do while label */
+        std::string enter_do_while_label = create_label(function_name, "enter_do_while");
+        emit(Quadruple(LABEL_OP, enter_do_while_label, "", ""));
         ++cur_token_idx;
-        if (!parse_statements(function_name)) {
+        /* Ñ­»·ÄÚ²¿Óï¾ä */
+        if (!parse_statements(function_name, has_return_statement)) {
             error_message("Invalid statements in do-while loop!");
             is_correct_loop_statement = false;
         }
+        /* while */
         if (tokens[cur_token_idx].get_val_string() != WHILE_SYM || tokens[cur_token_idx].get_output_type() != KEYWORD) {
             error_message("Expected while in do-while loop, instead got: " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
+        /* ( */
         if (tokens[cur_token_idx].get_val_string() != LPARENTHESIS_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Expected ( after while, instead got: " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
-        
+        /* condition */
         if (!parse_condition(function_name, is_condition_imm, condition_val, condition_temp_var, condition_type)) {
             error_message("Invalid condition in while");
             is_correct_loop_statement = false;
         }
+        /* Éú³ÉÌø×ªËÄÔªÊ½ */
+        if (is_condition_imm) {
+            if (condition_val > 0) { /* while ÄÚÌõ¼þºãÕæ, j µ½ enter */
+                emit(Quadruple(JUMP_OP, "", "", enter_do_while_label));
+            }
+        } else { /* ²»Öª, µ±ÎªÕæÊ±Ìø ¼´ bnz µ½ enter */
+            emit(Quadruple(BNZ_OP, "", "", enter_do_while_label));
+        }
+        /* ) */
         if (tokens[cur_token_idx].get_val_string() != RPARENTHESIS_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Expected ) after while condition, instead got: " + tokens[cur_token_idx].get_val_string());
@@ -652,36 +726,62 @@ bool parse_loop_statement(const std::string &function_name) { //TODO
     /* ÊÇ for Ñ­»· */
     if (tokens[cur_token_idx].get_val_string() == FOR_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         ++cur_token_idx;
+        /* ÒªÓÃµ½µÄ label Ãû */
+        std::string enter_for_label = create_label(function_name, "enter_for_loop");
+        std::string done_for_label = create_label(function_name, "done_for_loop");
+        /* ( */
         if (tokens[cur_token_idx].get_val_string() != LPARENTHESIS_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Expected ( after for, instead got: " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
+        /* ±êÊ¶·û */
         if (tokens[cur_token_idx].get_output_type() != IDENTIFIER) {
-            error_message("Expected identifier in for-loop init part, instead got: " +
-                          tokens[cur_token_idx].get_val_string());
+            error_message("Expected identifier in for-loop init part, not " + tokens[cur_token_idx].get_val_string());
+            is_correct_loop_statement = false;
+        }
+        Symbol *init_var = get_non_function_symbol(function_name, tokens[cur_token_idx].get_val_string());
+        if (!init_var) {
+            return false;
+        } else if (typeid(*init_var).name() == typeid(ConstantSymbol).name()) {
+            error_message("Cannot assign to const in for-loop init: " + init_var->get_name());
+            is_correct_loop_statement = false;
+        } else if (init_var->is_array()) {
+            error_message("Cannot assign to array in for-loop init: " + init_var->get_name());
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
+        /* = */
         if (tokens[cur_token_idx].get_val_string() != ASSIGN_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Expected = in for-loop init part, instead got: " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
-        
-        /* init_copyee */
-        bool is_init_copyee_imm;
-        int init_copyee_val;
-        std::string init_copyee_temp_var;
-        SymbolType init_copyee_type = UNKNOWN_SYMBOL_TYPE;
-        if (!parse_expression(function_name, is_init_copyee_imm, init_copyee_val, init_copyee_temp_var,
-                              init_copyee_type)) {
+        /* init_right */
+        bool is_init_right_imm = false;
+        int init_right_val = -23333;
+        std::string init_right_temp_var = "[INVALID init_right_temp_var]";
+        SymbolType init_right_type = UNKNOWN_SYMBOL_TYPE;
+        if (!parse_expression(function_name, is_init_right_imm, init_right_val, init_right_temp_var, init_right_type)) {
             error_message("Invalid expression in for-loop init part");
             is_correct_loop_statement = false;
         }
-        
+        std::string init_right_str = init_right_temp_var;
+        if (is_init_right_imm) {
+            init_right_str = init_right_type == CHAR_SYMBOL_TYPE ? std::string{(char) init_right_val} : std::to_string(
+                    init_right_val);
+        }
+        /* ¼ì²éÀàÐÍÊÇ·ñÏàÍ¬ */
+        if (init_var->get_symbol_type() != init_right_type) {
+            error_message("Different type assignment in for-loop init, left: " +
+                          symbol_type_strs[init_var->get_symbol_type()] + ", right: " +
+                          symbol_type_strs[init_right_type]);
+            is_correct_loop_statement = false;
+        }
+        /* Éú³É¸³ÖµÓï¾ä */
+        emit(Quadruple(ASSIGN_OP, init_var->get_name(), init_right_str, ""));
         /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
@@ -690,25 +790,46 @@ bool parse_loop_statement(const std::string &function_name) { //TODO
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
-        
+        /* Éú³É enter_for label ËÄÔªÊ½ */
+        emit(Quadruple(LABEL_OP, enter_for_label, "", ""));
         /* condition */
         if (!parse_condition(function_name, is_condition_imm, condition_val, condition_temp_var, condition_type)) {
             error_message("Invalid condition in for-loop!");
             is_correct_loop_statement = false;
         }
+        /* Éú³ÉÌø×ªËÄÔªÊ½ */
+        if (is_condition_imm) {
+            if (condition_val == 0) { /* for Ìõ¼þºã¼Ù, j µ½½áÊø */
+                emit(Quadruple(JUMP_OP, "", "", done_for_label));
+            }
+        } else { /* Ìõ¼þ²»Öª, µ±¼ÙÊ±²ÅÌø½áÊø */
+            emit(Quadruple(BZ_OP, condition_temp_var, "", done_for_label));
+        }
+        /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message(
-                    "Expected ; in for-loop after init part, instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("Expected ; in for-loop after init part, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
+        /* updating left identifier */
         if (tokens[cur_token_idx].get_output_type() != IDENTIFIER) {
-            error_message("Expected identifier in for-loop updating part, instead got: " +
+            error_message("Expected identifier in for-loop updating left, instead got: " +
                           tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
+        Symbol *updating_left_var = get_non_function_symbol(function_name, tokens[cur_token_idx].get_val_string());
+        if (!updating_left_var) {
+            return false;
+        } else if (typeid(*updating_left_var).name() == typeid(ConstantSymbol).name()) {
+            error_message("Cannot assign to const in for-loop update: " + updating_left_var->get_name());
+            is_correct_loop_statement = false;
+        } else if (updating_left_var->is_array()) {
+            error_message("Cannot assign to array in for-loop update: " + updating_left_var->get_name());
+            is_correct_loop_statement = false;
+        }
         ++cur_token_idx;
+        /* = */
         if (tokens[cur_token_idx].get_val_string() != ASSIGN_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message(
@@ -716,43 +837,66 @@ bool parse_loop_statement(const std::string &function_name) { //TODO
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
+        /* updating right identifier */
         if (tokens[cur_token_idx].get_output_type() != IDENTIFIER) {
-            error_message("Expected identifier in for-loop updating part, instead got: " +
+            error_message("Expected identifier in for-loop updating right, instead got: " +
                           tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
+        Symbol *updating_right_var = get_non_function_symbol(function_name, tokens[cur_token_idx].get_val_string());
+        if (!updating_right_var) {
+            return false;
+        } else if (updating_right_var->is_array()) {
+            error_message("Cannot assign from array in for-loop update: " + updating_right_var->get_name());
+            is_correct_loop_statement = false;
+        }
         ++cur_token_idx;
+        /* +/- */
         if ((tokens[cur_token_idx].get_val_string() != MINUS_SYM &&
              tokens[cur_token_idx].get_val_string() != PLUS_SYM) ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message(
-                    "Expected +/- in for-loop updating part, instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("Expected +/- in for-loop updating part, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
+        std::string op = tokens[cur_token_idx].get_val_string();
         ++cur_token_idx;
+        /* updating_size */
         int updating_size = -555555;
         if (!parse_unsigned_integer(updating_size)) {
-            error_message("Expected an unsigned integer in for-loop updating part, instead got: " +
-                          tokens[cur_token_idx].get_val_string());
+            error_message("Expected >=0 int as for-loop updating size, not " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
+        /* ¼ì²éÀàÐÍÊÇ·ñÏàÍ¬, ÕâÀï¾ÍÊÇ¼ì²é×ø±êÊÇ²»ÊÇ INT */
+        if (updating_left_var->get_symbol_type() != INT_SYMBOL_TYPE) {
+            error_message("For-loop updating left identifier should be int, not: " +
+                          symbol_type_strs[updating_left_var->get_symbol_type()]);
+            is_correct_loop_statement = false;
+        }
+        /* ) */
         if (tokens[cur_token_idx].get_val_string() != RPARENTHESIS_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message(
-                    "Expected ) after for-loop condition, instead got: " + tokens[cur_token_idx].get_val_string());
+            error_message("Expected ) after for-loop condition, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
         ++cur_token_idx;
-        if (!parse_statements(function_name)) {
+        /* Ñ­»·ÄÚ²¿Óï¾ä */
+        if (!parse_statements(function_name, has_return_statement)) {
             error_message("Invalid statements in for-loop!");
             is_correct_loop_statement = false;
         }
+        /* Éú³É +/- ËÄÔªÊ½, ÕâÀï²»·ÖÎö updating_right_var ÊÇ²»ÊÇ³£ÊýÁË */
+        emit(Quadruple(op, "#" + updating_right_var->get_name(), std::to_string(updating_size),
+                       "#" + updating_left_var->get_name()));
+        /* Éú³É j µ½ enter_for ËÄÔªÊ½ */
+        emit(Quadruple(JUMP_OP, "", "", enter_for_label));
+        /* ¿ªÒ»¸ö done_for label */
+        emit(Quadruple(LABEL_OP, done_for_label, "", ""));
         return is_correct_loop_statement;
     }
     return is_correct_loop_statement;
 }
 
-bool parse_conditional_statement(const std::string &function_name) {
+bool parse_conditional_statement(const std::string &function_name, bool &has_return_statement) {
     bool is_correct_conditional_statement = true;
     /* if */
     if (tokens[cur_token_idx].get_val_string() != IF_SYM || tokens[cur_token_idx].get_output_type() != KEYWORD) {
@@ -794,7 +938,7 @@ bool parse_conditional_statement(const std::string &function_name) {
     }
     ++cur_token_idx;
     /* if true ºóÓï¾ä */
-    if (!parse_statements(function_name)) {
+    if (!parse_statements(function_name, has_return_statement)) {
         error_message("Invalid statement after if!");
         is_correct_conditional_statement = false;
     }
@@ -806,7 +950,7 @@ bool parse_conditional_statement(const std::string &function_name) {
     if (tokens[cur_token_idx].get_val_string() == ELSE_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         ++cur_token_idx;
         /* if false ºóÓï¾ä */
-        if (!parse_statements(function_name)) {
+        if (!parse_statements(function_name, has_return_statement)) {
             error_message("Invalid statement after else!");
             is_correct_conditional_statement = false;
         }
@@ -1012,8 +1156,13 @@ bool parse_expression(const std::string &function_name, bool &is_res_imm, int &r
         if (is_res_imm) { /* Ö®Ç°½á¹ûÒ»Ö±ÊÇÁ¢¼´Êý */
             if (!is_term_imm) { /* ³öÏÖµÚÒ»¸ö±äÁ¿, »¹Î´×öÔËËã */
                 is_res_imm = false;
-                emit(Quadruple(op, res_type == CHAR_SYMBOL_TYPE ? std::string{(char) res_val} : std::to_string(res_val),
-                               term_temp_var, res_temp_var));
+                if (res_val == 0) {
+                    emit(Quadruple(ASSIGN_OP, res_temp_var, term_temp_var, ""));
+                } else {
+                    emit(Quadruple(op,
+                                   res_type == CHAR_SYMBOL_TYPE ? std::string{(char) res_val} : std::to_string(res_val),
+                                   term_temp_var, res_temp_var));
+                }
             } else { /* ³£ÊýÏà¼Ó¼õ */
                 res_val = op == PLUS_SYM ? res_val + term_val : op == MINUS_SYM ? res_val - term_val : -2333333;
             }
@@ -1069,8 +1218,13 @@ bool parse_term(const std::string &function_name, bool &is_res_imm, int &res_val
         if (is_res_imm) { /* Ö®Ç°µÄÒò×Ó½á¹û¶¼ÊÇ³£Êý */
             if (!is_factor_imm) { /* ³öÏÖµÚÒ»¸öÁÙÊ±±äÁ¿ »¹Î´×÷ÔËËã */
                 is_res_imm = false;
-                emit(Quadruple(op, res_type == CHAR_SYMBOL_TYPE ? std::string{(char) res_val} : std::to_string(res_val),
-                               factor_temp_var, res_temp_var));
+                if (res_val == 1) {
+                    emit(Quadruple(ASSIGN_OP, res_temp_var, factor_temp_var, ""));
+                } else {
+                    emit(Quadruple(op,
+                                   res_type == CHAR_SYMBOL_TYPE ? std::string{(char) res_val} : std::to_string(res_val),
+                                   factor_temp_var, res_temp_var));
+                }
             } else { /* ³£³£³Ë³ý */
                 res_val = op == MUL_SYM ? res_val * factor_val : op == DIV_SYM ? res_val / factor_val : -233666433;
             }
