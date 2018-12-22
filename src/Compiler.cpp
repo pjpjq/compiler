@@ -5,7 +5,7 @@
 #include "Compiler.h"
 
 std::fstream output_file;
-std::string source_file_str;
+std::string source_file_in_str;
 
 /* 词法分析 */
 int cur_ch_idx;
@@ -29,47 +29,38 @@ void init_compiler() {
     init_IR();
 }
 
-void print_compiler_results() {
+void report_n_errors() {
     std::cout << std::endl << "Finished compilation with " << n_errors << " errors!" << std::endl;
 }
 
-bool compile(const std::string &source_file_path, const std::string &output_file_path,
-             bool output_file_and_std) {
+bool compile(const std::string &test_file_path, const std::string &messages_file_path, const std::string &dst_file_path,
+             bool cout_messages) {
     /* 把源文件存在 string 里 */
-    std::ifstream source_file(source_file_path);
+    std::ifstream source_file(test_file_path);
     if (!source_file.is_open()) {
-        std::cout << "[ERROR] " << source_file_path << " cannot be opened!" << std::endl;
+        std::cout << "[ERROR] " << test_file_path << " cannot be opened!" << std::endl;
         return false;
     }
     std::stringstream ss;
     ss << source_file.rdbuf();
-    source_file_str = ss.str();
+    source_file_in_str = ss.str();
     
-    /* 输出路径非空就输出到文件 */
+    /* messages 输出到文件 */
     std::streambuf *cout_buf = std::cout.rdbuf();
-    if (!output_file_path.empty()) {
-        if (!redirect_cout(output_file_path)) {
-            return false;
-        }
-    }
+    redirect_cout_to(messages_file_path);
     
-    /* -----------------------------------开始计时. -------------------------------------------*/
+    /*------------开始计时.-----------*/
     auto start = std::chrono::high_resolution_clock::now();
-    
     init_compiler();
-    /* Parse the source program. */
     parse_program();
-    print_compiler_results();
-    
-    /* -----------------------------------停止计时. -------------------------------------------*/
+    generate_code(dst_file_path);
+    report_n_errors();
+    /* -----------停止计时. -----------*/
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Compiled in: " << duration.count() << " microseconds." << std::endl;
-    
-    if (!output_file_path.empty() && output_file_and_std) {  /* 输出到文件以及 stdout */
-        if (!cout_output_file(output_file_path, cout_buf)) {
-            return false;
-        }
+    std::cout << "Compiled " << test_file_path << " -> " << dst_file_path << " (" << duration.count() << " mu-secs)\n";
+    if (cout_messages) {    /* 输出 messages 到 stdout */
+        return cout_output_file(messages_file_path, cout_buf);
     }
     return true;
 }

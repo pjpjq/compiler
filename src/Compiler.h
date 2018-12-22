@@ -12,25 +12,25 @@
 #include <sstream>
 #include <vector>
 
-
 #include "Lexer.h"
 #include "Parser.h"
 #include "SymbolTable.h"
 #include "utils.h"
 #include "IR.h"
+#include "CodeGen.h"
 
 void init_compiler();
 
 /**
  *
- * @param source_file_path
- * @param output_file_path
- * @param output_file_and_std
+ * @param test_file_path
+ * @param messages_file_path
+ * @param cout_messages
  * @return
  */
-bool compile(const std::string &source_file_path, const std::string &output_file_path = "",
-             bool output_file_and_std = true);
+bool compile(const std::string &test_file_path, const std::string &messages_file_path, const std::string &dst_file_path,
+             bool cout_messages);
 
-void print_compiler_results();
+void report_n_errors();
 
 #endif //COMPILER_COMPILER_H

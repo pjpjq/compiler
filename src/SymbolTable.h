@@ -32,7 +32,7 @@ enum SymbolType {
     UNKNOWN_SYMBOL_TYPE, INT_SYMBOL_TYPE, CHAR_SYMBOL_TYPE, VOID_SYMBOL_TYPE,
 };
 
-static std::string symbol_type_strs[] = {"Unknown symbol type", "int", "char", "void"};
+extern std::string symbol_type_strs[];
 
 class Symbol {
 public:
@@ -84,6 +84,9 @@ public:
     VariableTable variable_table;
     
     std::vector<SymbolType> parameter_types;
+    
+//    int get_n_words();
+
 private:
 };
 /* -----------------------------------------------------API --------------------------------------------------*/
@@ -93,6 +96,12 @@ private:
  */
 void init_symbol_tables();
 
+/**
+ * 取一个变量/常量 (不是函数), 先查局部, 再查全局
+ * @param function_name: local scope
+ * @param symbol_name: symbol to get
+ * @return  查到的符号, nullptr 就是没有
+ */
 Symbol *get_non_function_symbol(const std::string &function_name, const std::string &symbol_name);
 
 /* --------------------------------------------------Global------------------------------------------------------------*/

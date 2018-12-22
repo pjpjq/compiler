@@ -52,7 +52,7 @@ private:
 };
 
 
-extern std::string source_file_str;
+extern std::string source_file_in_str;
 extern int cur_ch_idx;
 extern char cur_ch;
 extern std::string token_buffer;

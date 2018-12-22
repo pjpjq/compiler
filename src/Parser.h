@@ -8,12 +8,16 @@
 #define COMPILER_PARSER_H
 
 #include <typeinfo>
+#include <vector>
+#include <string>
 
 #include "constants.h"
 #include "Lexer.h"
 #include "utils.h"
 #include "SymbolTable.h"
 #include "IR.h"
+
+#define PRINTF_STRING_ADD_NEW_LINE 1
 
 /**
  * 分析是不是无符号整数

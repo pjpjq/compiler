@@ -26,7 +26,6 @@ void emit(Quadruple quadruple) {
     }
     if (FOUT_QUADRUPLE) {
         ir_fout << quadruple << std::endl;
-//        ir_fout << std::string{'c'} << std::endl;
     }
 }
 
@@ -43,6 +42,10 @@ std::string create_temp_var() {
 }
 
 bool is_temp_var(const std::string &str) {
+    return is_ir_var(str) && is_string_number(str.substr(1));
+}
+
+bool is_ir_var(const std::string &str) {
     return !str.empty() && str[0] == '#';
 }
 
@@ -54,11 +57,11 @@ std::string create_label(const std::string &function_name, const std::string &in
     }
     assert(!labels.empty());
     std::string res = "@label_" + std::to_string(labels.back()) + "_" + function_name + "_" + info;
-    assert(is_label(res));
+    assert(is_numbered_label(res));
     return res;
 }
 
-bool is_label(const std::string &str) {
+bool is_numbered_label(const std::string &str) {
     return !str.empty() && str[0] == '@' && str.find("@label_") != std::string::npos;
 }
 

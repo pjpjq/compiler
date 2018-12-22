@@ -5,7 +5,7 @@
 #ifndef COMPILER_IR_H
 #define COMPILER_IR_H
 
-#define COUT_QUADRUPLE 1
+#define COUT_QUADRUPLE 0
 #define FOUT_QUADRUPLE 1
 
 #include <vector>
@@ -36,7 +36,7 @@ void init_IR();
  * @param str
  * @return
  */
-bool is_label(const std::string &str);
+bool is_numbered_label(const std::string &str);
 
 /**
  * 把生成的四元式加到中间代码里
@@ -51,11 +51,18 @@ void emit(Quadruple quadruple);
 std::string create_temp_var();
 
 /**
- * 判断一个 str 是不是 临时变量
+ * 判断一个 str 是不是 临时变量 (#数字)
  * @param str
  * @return
  */
 bool is_temp_var(const std::string &str);
+
+/**
+ * 判断是不是中间代码的变量: (#开头, 后面可能是临时变量, 可能是源代码的变量)
+ * @param str
+ * @return
+ */
+bool is_ir_var(const std::string &str);
 
 /**
  * 建一个新的 label
@@ -79,14 +86,13 @@ class Quadruple {
         }
         if (quadruple.op == DECLARE_FUNCTION_OP) { /* left: 返回类型, right: 函数名 */
             if (quadruple.left != INT_SYM && quadruple.left != CHAR_SYM && quadruple.left != VOID_SYM) {
-                error_message(
-                        "Quadruple declare_function expects int/char/void as left, instead got: " + quadruple.left);
+                error_message("Quadruple declare_function expects int/char/void as left, not: " + quadruple.left);
             }
             return out << quadruple.left << " " << quadruple.right << "()";
         }
         if (quadruple.op == DEFINE_PARAMETER_OP) { /* left: 参数类型, right: 参数名 */
             if (quadruple.left != INT_SYM && quadruple.left != CHAR_SYM) {
-                error_message("Quadruple define_parameter expects int/char as left, instead got: " + quadruple.left);
+                error_message("Quadruple define_parameter expects int/char as left, not: " + quadruple.left);
             }
             return out << "para " << quadruple.left << " " << quadruple.right;
         }
@@ -107,45 +113,45 @@ class Quadruple {
         }
         if (quadruple.op == DECLARE_VARIABLE_OP) { /* left: 类型, right: 变量名, result: length */
             if (quadruple.left != INT_SYM && quadruple.left != CHAR_SYM) {
-                error_message("Quadruple declare_variable expects int/char as left, instead got: " + quadruple.left);
+                error_message("Quadruple declare_variable expects int/char as left, not: " + quadruple.left);
             }
             out << "var " << quadruple.left << " " << quadruple.right;
-            if (std::stoi(quadruple.result) > 0) { /* 是数组 */
+            if (is_string_number(quadruple.result) && std::stoi(quadruple.result) > 0) { /* 是数组 */
                 out << "[" << quadruple.result << "]";
             }
             return out;
         }
-        if (quadruple.op == JUMP_OP) { /* result: label */
-            if (!is_label(quadruple.result)) {
-                error_message("Quadruple jump_op expects label as result, instead got: " + quadruple.result);
+        if (quadruple.op == JUMP_OP) { /* result: label/"main" */
+            if (!is_numbered_label(quadruple.result) && quadruple.result != MAIN_SYM) {
+                error_message("Quadruple jump_op expects label/main as result, not: " + quadruple.result);
             }
             return out << "j " << quadruple.result;
         }
         if (quadruple.op == BZ_OP) { /* left: var, result: label */
-            if (!is_label(quadruple.result)) {
-                error_message("Quadruple bz_op expects label as result, instead got: " + quadruple.result);
+            if (!is_numbered_label(quadruple.result)) {
+                error_message("Quadruple bz_op expects label as result, not: " + quadruple.result);
             }
             return out << "bz " << quadruple.left << " " << quadruple.result;
         }
         if (quadruple.op == BNZ_OP) { /* left, var, result: label */
-            if (!is_label(quadruple.result)) {
-                error_message("Quadruple bnz_op expects label as result, instead got: " + quadruple.result);
+            if (!is_numbered_label(quadruple.result)) {
+                error_message("Quadruple bnz_op expects label as result, not: " + quadruple.result);
             }
             return out << "bnz " << quadruple.left << " " << quadruple.result;
         }
         if (quadruple.op == SCANF_OP) { /* left: var type, right: var name */
             if (quadruple.left != INT_SYM && quadruple.left != CHAR_SYM) {
-                error_message("Quadruple scanf_op expects int/char as left, instead got: " + quadruple.left);
+                error_message("Quadruple scanf_op expects int/char as left, not: " + quadruple.left);
             }
             return out << "scanf " << quadruple.left << " " << quadruple.right;
         }
         if (quadruple.op == PRINTF_OP) {
             if (quadruple.left == INT_SYM || quadruple.left == CHAR_SYM) { /* left: var type, right: var name */
                 return out << "print " << quadruple.left << " " << quadruple.right;
-            } else if (quadruple.left == PRINTF_STRING_TYPE_SYM) { /* left: string type, right: string val */
+            } else if (quadruple.left == PRINTF_STRING_TYPE_SYM) { /* left: string type, right: str_i */
                 return out << "print " << quadruple.left << " " << quadruple.right;
             } else {
-                error_message("Quadruple printf_op expects int/char/string as left, instead got: " + quadruple.left);
+                error_message("Quadruple printf_op expects int/char/string as left, not: " + quadruple.left);
                 return out << "[ERROR] Invalid printf_op in quadruple" << quadruple.left;
             }
         }
@@ -155,9 +161,9 @@ class Quadruple {
         if (quadruple.op == WRITE_ARRAY_OP) { /* left: array_name, right: array_offset, result: gettee */
             return out << quadruple.left << "[" << quadruple.right << "]" << " = " << quadruple.result;
         }
-        if (quadruple.op == LABEL_OP) { /* left: label_name */
-            if (!is_label(quadruple.left)) {
-                error_message("Quadruple label_op expects label as left, instead got: " + quadruple.left);
+        if (quadruple.op == LABEL_OP) { /* left: label_name/"main" */
+            if (!is_numbered_label(quadruple.left) && quadruple.left != MAIN_SYM) {
+                error_message("Quadruple label_op expects label/main as left, not: " + quadruple.left);
             }
             return out << quadruple.left << ":";
         }
@@ -171,12 +177,12 @@ class Quadruple {
 
 public:
     Quadruple(const std::string &op, const std::string &left, const std::string &right, const std::string &result);
-
-private:
+    
     std::string op;
     std::string left;
     std::string right;
     std::string result;
+private:
 };
 
 #endif //COMPILER_IR_H

@@ -8,98 +8,94 @@
 #include <string>
 #include <unordered_set>
 
+/* 最多连续空格 */
+extern const int MAX_LIMIT_N_CONSECUTIVE_SPACES;
 /* 整数最长10位数 */
-const int MAX_N_DIGITS_INT = 10;
+extern const int MAX_N_DIGITS_INT;
 /* 最大函数数目限制 */
-const int MAX_N_FUNCTIONS_LIMIT = 12345;
+extern const int MAX_N_FUNCTIONS_LIMIT;
 /* 最大参数数目限制 */
-const int MAX_N_PARAMETERS_LIMIT = 20;
+extern const int MAX_N_PARAMETERS_LIMIT;
 /* 最大语句数目限制 */
-const int MAX_N_STATEMENTS_LIMIT = 123456;
+extern const int MAX_N_STATEMENTS_LIMIT;
 /* 最大变量定义数目限制 */
-const int MAX_N_VAR_DEFINITIONS = 12345;
+extern const int MAX_N_VAR_DEFINITIONS;
 /* 一个表达式里最多连续的项 */
-const int MAX_N_TERMS_PER_EXPRESSION = 12345;
+extern const int MAX_N_TERMS_PER_EXPRESSION;
 /* 一个项里最多连续的因子数 */
-const int MAX_N_FACTORS_PER_TERM = 2345;
+extern const int MAX_N_FACTORS_PER_TERM;
 /* 一句 scanf 最多 var 数 */
-const int MAX_N_SCANF_VARS = 1234;
+extern const int MAX_N_SCANF_VARS;
 /* 复合语句最多内部语句 */
-const int MAX_N_INNER_STATEMENTS = 2333;
+extern const int MAX_N_INNER_STATEMENTS;
 
 /* keywords 共同为一类 */
-static std::string CONST_SYM = "const";
-static std::string INT_SYM = "int";
-static std::string CHAR_SYM = "char";
-static std::string VOID_SYM = "void";
-static std::string MAIN_SYM = "main";
-static std::string IF_SYM = "if";
-static std::string ELSE_SYM = "else";
-static std::string DO_SYM = "do";
-static std::string WHILE_SYM = "while";
-static std::string FOR_SYM = "for";
-static std::string SCANF_SYM = "scanf";
-static std::string PRINTF_SYM = "printf";
-static std::string RETURN_SYM = "return";
+extern std::string CONST_SYM;
+extern std::string INT_SYM;
+extern std::string CHAR_SYM;
+extern std::string VOID_SYM;
+extern std::string MAIN_SYM;
+extern std::string IF_SYM;
+extern std::string ELSE_SYM;
+extern std::string DO_SYM;
+extern std::string WHILE_SYM;
+extern std::string FOR_SYM;
+extern std::string SCANF_SYM;
+extern std::string PRINTF_SYM;
+extern std::string RETURN_SYM;
 
-static std::unordered_set<std::string> KEYWORD_SET{CONST_SYM, INT_SYM, CHAR_SYM, VOID_SYM, MAIN_SYM, IF_SYM,
-                                                   ELSE_SYM, DO_SYM, WHILE_SYM, FOR_SYM, SCANF_SYM, PRINTF_SYM,
-                                                   RETURN_SYM};
+extern std::unordered_set<std::string> KEYWORD_SET;
 
 /* separators 分界符, 共同为一类
  * 这里实际采用两种分类型方式, 大类型(SEPARATOR) 用于输出, 小类型用于具体判断 */
-static std::string PLUS_SYM = "+";
-static std::string MINUS_SYM = "-";
-static std::string MUL_SYM = "*";
-static std::string DIV_SYM = "/";
+extern std::string PLUS_SYM;
+extern std::string MINUS_SYM;
+extern std::string MUL_SYM;
+extern std::string DIV_SYM;
 
-static std::string COMMA_SYM = ",";
-static std::string SEMICOLON_SYM = ";";
-static std::string COLON_SYM = ":";
-static std::string ASSIGN_SYM = "=";
+extern std::string COMMA_SYM;
+extern std::string SEMICOLON_SYM;
+extern std::string COLON_SYM;
+extern std::string ASSIGN_SYM;
 
-static std::string EQ_SYM = "==";
-static std::string NE_SYM = "!=";
-static std::string LT_SYM = "<";
-static std::string GT_SYM = ">";
-static std::string LE_SYM = "<=";
-static std::string GE_SYM = ">=";
+extern std::string EQ_SYM;
+extern std::string NE_SYM;
+extern std::string LT_SYM;
+extern std::string GT_SYM;
+extern std::string LE_SYM;
+extern std::string GE_SYM;
 
-static std::string LPARENTHESIS_SYM = "(";
-static std::string RPARENTHESIS_SYM = ")";
-static std::string LBRACKET_SYM = "[";
-static std::string RBRACKET_SYM = "]";
-static std::string LBRACE_SYM = "{";
-static std::string RBRACE_SYM = "}";
+extern std::string LPARENTHESIS_SYM;
+extern std::string RPARENTHESIS_SYM;
+extern std::string LBRACKET_SYM;
+extern std::string RBRACKET_SYM;
+extern std::string LBRACE_SYM;
+extern std::string RBRACE_SYM;
 
-static std::unordered_set<std::string> SEPARATOR_SET{PLUS_SYM, MINUS_SYM, MUL_SYM, DIV_SYM,
-                                                     COMMA_SYM, SEMICOLON_SYM, COLON_SYM, ASSIGN_SYM,
-                                                     EQ_SYM, NE_SYM, LT_SYM, GT_SYM, LE_SYM, GE_SYM,
-                                                     LPARENTHESIS_SYM, RPARENTHESIS_SYM, LBRACKET_SYM,
-                                                     RBRACKET_SYM, LBRACE_SYM, RBRACE_SYM};
+extern std::unordered_set<std::string> SEPARATOR_SET;
 
 /**
  * 四元式的运算, 末尾加空格使之不能被作为标识符
  */
-static std::string DECLARE_FUNCTION_OP = "declare_function ";
-static std::string DEFINE_PARAMETER_OP = "define_parameter ";
-static std::string PUSH_PARAMETER_OP = "push_parameter ";
-static std::string CALL_FUNCTION_OP = "call_function ";
-static std::string ASSIGN_RETURN_VAL_OP = "assign_return_val ";
-static std::string ASSIGN_OP = "assign_ ";
-static std::string RETURN_OP = "return ";
-static std::string DECLARE_VARIABLE_OP = "declare_variable ";
-//static std::string DECLARE_CONST_OP = "declare_const ";
-static std::string JUMP_OP = "jump ";
-static std::string BZ_OP = "bz ";
-static std::string BNZ_OP = "bnz ";
-static std::string SCANF_OP = "scanf ";
-static std::string PRINTF_OP = "printf ";
-static std::string READ_ARRAY_OP = "read_array ";
-static std::string WRITE_ARRAY_OP = "write_array ";
-static std::string LABEL_OP = "label_op ";
-static std::string EXIT_OP = "exit ";
+extern std::string DECLARE_FUNCTION_OP;
+extern std::string DEFINE_PARAMETER_OP;
+extern std::string PUSH_PARAMETER_OP;
+extern std::string CALL_FUNCTION_OP;
+extern std::string ASSIGN_RETURN_VAL_OP;
+extern std::string ASSIGN_OP;
+extern std::string RETURN_OP;
+extern std::string DECLARE_VARIABLE_OP;
+//extern std::string DECLARE_CONST_OP = "declare_const ";
+extern std::string JUMP_OP;
+extern std::string BZ_OP;
+extern std::string BNZ_OP;
+extern std::string SCANF_OP;
+extern std::string PRINTF_OP;
+extern std::string READ_ARRAY_OP;
+extern std::string WRITE_ARRAY_OP;
+extern std::string LABEL_OP;
+extern std::string EXIT_OP;
 /* printf 的四元式里的一种类型 */
-static std::string PRINTF_STRING_TYPE_SYM = "string";
+extern std::string PRINTF_STRING_TYPE_SYM;
 
 #endif //COMPILER_CONSTANTS_H

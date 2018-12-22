@@ -8,22 +8,14 @@ Token::Token(TokenOutputType token_output_type, int token_val_int, const std::st
         : token_output_type(token_output_type), token_val_int(token_val_int), token_val_string(token_val_string),
           line_nbr(line_nbr) {}
 
-std::string Token::get_output_string() {
-    return token_output_type_strs[token_output_type] + " " + token_val_string + " Line " + std::to_string(line_nbr);
-}
+//std::string Token::get_output_string() {
+//    return token_output_type_strs[token_output_type] + " " + token_val_string + " Line " + std::to_string(line_nbr);
+//}
 
-TokenOutputType Token::get_output_type() {
-    return token_output_type;
-}
+TokenOutputType Token::get_output_type() { return token_output_type; }
 
-int Token::get_val_int() {
-    return token_val_int;
-}
+int Token::get_val_int() { return token_val_int; }
 
-std::string Token::get_val_string() {
-    return token_val_string;
-}
+std::string Token::get_val_string() { return token_val_string; }
 
-int Token::get_line_num() {
-    return line_nbr;
-}
+int Token::get_line_num() { return line_nbr; }
