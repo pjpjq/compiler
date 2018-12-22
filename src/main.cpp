@@ -1,40 +1,38 @@
-#define NDEBUG
-#include <cassert>
-
 #include <iostream>
 #include <string>
 
 #include "Compiler.h"
 
+#define CIN_TEST_FILE 0
+#define USE_MAC_CLION 1
+
 int main() {
-    bool use_mac_clion = true;
-    
-    /* 测试 n_tests 次 */
     int n_tests = 1;
-    
-    const std::string test_file_name = "15241035_test.txt";
-    const std::string test_result_file_name = "15241035_test_result.txt";
-    
-    /* Win codeblocks path */
-    std::string source_file_path = test_file_name;
-    std::string output_file_path = test_result_file_name;
-    
-    /* Mac clion path */
-    if (use_mac_clion) {
-        std::cout << "[Warning] 注意当前代码路径仅适用于 Mac Clion 而不是 CodeBlocks!" << std::endl;
-        const std::string mac_clion_tests_prefix = "../tests/";
-        const std::string mac_clion_outputs_prefix = "../outputs/";
-        source_file_path = mac_clion_tests_prefix + test_file_name;
-        output_file_path = mac_clion_outputs_prefix + test_result_file_name;
+    std::string test_file_path = "15241035_test.txt";
+    if (CIN_TEST_FILE) {
+        std::cout << "Enter test file name: ";
+        std::cin >> test_file_path;
     }
     
-    bool output_file_and_std = true;
+    std::string messages_file_path = "messages_" + test_file_path;
+    std::string dst_file_path = "dst_" + test_file_path + ".asm";
+    
+    if (USE_MAC_CLION) {
+        std::cout << "[Warning] 注意当前代码路径仅适用于 Mac Clion 而不是 CodeBlocks!" << std::endl;
+        const std::string mac_clion_tests_prefix = "../tests/";
+        test_file_path = mac_clion_tests_prefix + test_file_path;
+        
+        const std::string mac_clion_outputs_prefix = "../outputs/";
+        messages_file_path = mac_clion_outputs_prefix + messages_file_path;
+        dst_file_path = mac_clion_outputs_prefix + dst_file_path;
+    }
+    
+    bool cout_messages = true;
     for (int i = 0; i < n_tests; ++i) {
-        bool compiled_successfully = compile(source_file_path, output_file_path, output_file_and_std);
+        bool compiled_successfully = compile(test_file_path, messages_file_path, dst_file_path, cout_messages);
         if (!compiled_successfully) {
             std::cout << "Compiled failed!" << std::endl;
         }
     }
-    
     return 0;
 }
