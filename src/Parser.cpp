@@ -412,11 +412,6 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
             error_message("Invalid expression!");
             is_correct_statements = false;
         }
-        if (get_function(function_name)->get_symbol_type() != return_type) { /* 检查返回类型 */
-            error_message("Expected return type: " + symbol_type_strs[get_function(function_name)->get_symbol_type()] +
-                          " , not " + symbol_type_strs[return_type]);
-            is_correct_statements = false;
-        }
         std::string return_str = temp_var_to_return;
         if (is_return_val_imm) {
             return_str = return_type == INT_SYMBOL_TYPE ? std::to_string(return_val)
@@ -1763,7 +1758,6 @@ bool parse_program() {
             break;
         }
     }
-//    emit(Quadruple(EXIT_OP, "", "", ""));    /* 生成退出四元式 哟必要吗??? */
     if (tokens[cur_token_idx].get_line_num() != line_count) {
         error_message("Error after main(), stopped at line " + std::to_string(tokens[cur_token_idx].get_line_num()));
         is_correct_program = false;
