@@ -1412,10 +1412,9 @@ bool parse_funtion_call(const std::string &function_name) {
         return false;
     }
     bool is_correct_function_call = true;
-    /* 处理被调用的函数名 */
+    /* callee */
     if (tokens[cur_token_idx].get_output_type() != IDENTIFIER) {
-        error_message("Function call expected identifier as the beginning, not: " +
-                      tokens[cur_token_idx].get_val_string());
+        error_message("Function call expected callee as head, not: " + tokens[cur_token_idx].get_val_string());
         is_correct_function_call = false;
     }
     std::string callee = tokens[cur_token_idx].get_val_string();
@@ -1423,8 +1422,7 @@ bool parse_funtion_call(const std::string &function_name) {
     /* ( */
     if (tokens[cur_token_idx].get_val_string() != LPARENTHESIS_SYM ||
         tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-        error_message("Expected ( before value parameters in function call, not: " +
-                      tokens[cur_token_idx].get_val_string());
+        error_message("Expected ( before value params in func call, not: " + tokens[cur_token_idx].get_val_string());
         is_correct_function_call = false;
     }
     ++cur_token_idx;
@@ -1440,7 +1438,6 @@ bool parse_funtion_call(const std::string &function_name) {
         is_correct_function_call = false;
     }
     ++cur_token_idx;
-    /* 生成四元式 */
     emit(Quadruple(CALL_FUNCTION_OP, callee, "", ""));
     return is_correct_function_call;
 }
@@ -1492,7 +1489,7 @@ bool parse_main_function_definition() {
     bool is_correct_main_function_definition = true;
     /* void */
     if (tokens[cur_token_idx].get_val_string() != VOID_SYM) {
-        error_message("main function starts with void, not: " + tokens[cur_token_idx].get_val_string());
+        error_message("main function return type should be void, not: " + tokens[cur_token_idx].get_val_string());
         is_correct_main_function_definition = false;
     }
     if (tokens[cur_token_idx].get_output_type() != KEYWORD) {
@@ -1548,8 +1545,8 @@ bool parse_main_function_definition() {
         is_correct_main_function_definition = false;
     }
     if (is_correct_main_function_definition) {
-        std::cout << "Line " << tokens[cur_token_idx].get_line_num()
-                  << ": done void function definition! (" + function_name + ")" << std::endl;
+        std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done void func def! (" + function_name + ")"
+                  << std::endl;
     }
     return is_correct_main_function_definition;
 }
@@ -1616,8 +1613,8 @@ bool parse_non_void_function_definition() {
     }
     ++cur_token_idx;
     if (is_correct_non_void_function_definiton) {
-        std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done non void function definition! ("
-                  << function_name << ")" << std::endl;
+        std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done non void func def! (" << function_name
+                  << ")" << std::endl;
     }
     return is_correct_non_void_function_definiton;
 }
@@ -1684,8 +1681,8 @@ bool parse_void_function_definition() {
     }
     ++cur_token_idx;
     if (is_correct_void_function_definition) {
-        std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done void function definition! ("
-                  << function_name << ")" << std::endl;
+        std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done void func def! (" << function_name
+                  << ")" << std::endl;
     }
     return is_correct_void_function_definition;
 }
@@ -1784,15 +1781,13 @@ bool parse_program() {
             break;
         }
         if (cur_token_idx >= tokens.size()) {
-            error_message("?! token idx out of range???");
+            error_message("WEIRD?! token idx out of range???");
             break;
         }
     }
     if (tokens[cur_token_idx].get_line_num() != line_count) {
-        error_message("Error after main(), stopped at line " + std::to_string(tokens[cur_token_idx].get_line_num()));
-        is_correct_program = false;
-    }
-    if (is_correct_program) {
+        error_message("Some error caused early stop at line " + std::to_string(tokens[cur_token_idx].get_line_num()));
+    } else if (is_correct_program) {
         std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done program!" << std::endl;
     }
     return is_correct_program;

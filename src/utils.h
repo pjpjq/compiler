@@ -19,7 +19,7 @@ extern std::fstream output_file;
 extern std::vector<Token> tokens;
 extern int cur_token_idx;
 
-void skip2before(const std::string &dst_token = "");
+void skip2before(const std::string &target_token = "");
 /**
  * 打印错误信息及当前单词所在位置(行号), line_num 默认为 0, 输出当前单词的 line_num, 否则则按指定输出(词法分析时)
  * @param error_info

@@ -8,7 +8,7 @@ struct Reg {
     int offset = -1;
     int n_uses = 0;
     std::string var_name;
-    bool is_active = false;
+    bool is_busy = false;
 //    bool is_int = 1;
     bool is_global = false;
 };
@@ -42,6 +42,7 @@ Quadruple cur_quad = Quadruple(EXIT_OP, "", "", "");  // for debugging
 //std::unordered_map<std::string, Reg *> regs;
 //std::unordered_map<std::string, Reg *> var2reg_idx;
 //std::set<std::string> free_temps_vars;
+std::vector<std::string> _;
 
 void init_code_generator() {
     lines.clear();
@@ -57,23 +58,21 @@ void init_code_generator() {
     n_param_read = 0;
     value_params.clear();
 //    available_reg_idx = 0;
-    
     code_fout.open(code_fout_name);
     if (!code_fout) {
         error_message("Cannot open file: " + code_fout_name);
         return;
     }
-    
     cur_quad = Quadruple(EXIT_OP, "", "", "");
 }
 
-void init_reg_indices() { // save regs
+void clear_regs() { // save regs
     var2reg_idx.clear();
     for (int i = 0; i < N_REGS; ++i) {
-        if (regs[i].is_active) {
+        if (regs[i].is_busy) {
             std::string ptr = regs[i].is_global ? "($gp)" : "($fp)";
             generate_line("sw $s" + std::to_string(i) + ", " + std::to_string(regs[i].offset) + ptr);
-            regs[i].is_active = false;
+            regs[i].is_busy = false;
         }
     }
 }
@@ -117,12 +116,12 @@ std::string get_reg(const std::string &ir_var_name, std::vector<std::string> &co
             next_reg_idx = (next_reg_idx + 1) % N_REGS;
         }
     }
-    bool was_active = regs[next_reg_idx].is_active;
-    if (was_active) {
+    bool was_busy = regs[next_reg_idx].is_busy;
+    if (was_busy) {
         std::string ptr = regs[next_reg_idx].is_global ? "($gp)" : "($fp)";
         generate_line("sw $s" + std::to_string(next_reg_idx) + ", " + std::to_string(regs[next_reg_idx].offset) + ptr);
     } else {
-        regs[next_reg_idx].is_active = true;
+        regs[next_reg_idx].is_busy = true;
     }
     
     if (is_temp_var(ir_var_name)) {
@@ -145,7 +144,7 @@ std::string get_reg(const std::string &ir_var_name, std::vector<std::string> &co
     generate_line("lw $s" + std::to_string(next_reg_idx) + ", " + std::to_string(regs[next_reg_idx].offset) + ptr);
     regs[next_reg_idx].n_uses = 0;
 //    regs[next_reg_idx].is_int = is_int;
-    if (was_active) {
+    if (was_busy) {
         if (var2reg_idx.count(regs[next_reg_idx].var_name) == 0) {
             error_message("No such active ir_var_name: " + regs[next_reg_idx].var_name);
         } else {
@@ -265,7 +264,7 @@ void generate_function_declaration(const std::string &function_name) {
     cur_addr = 0;
     n_param_read = 0;
     
-    init_reg_indices();
+    clear_regs();
     
     generate_line("##########################################");
     generate_line(function_name + ": "); // function label
@@ -290,7 +289,7 @@ void generate_var_or_param_declaration(const std::string &function_name, const s
             return;
         }
         local_offsets[ir_var] = int_ptr;
-        /* 这里用 get_non_function_symbol(), 是因为优先找 local 而已经确保了 local 有 */
+        assert(is_local_variable(function_name, var_name) || is_parameter(function_name, var_name));
         int_ptr += 4 * (get_non_function_symbol(function_name, var_name)->is_array() ?
                         get_non_function_symbol(function_name, var_name)->get_length() : 1);
     }
@@ -322,12 +321,11 @@ void generate_function_call(const std::string &caller, const std::string &callee
             generate_line("li $t0, " + value_param);
             generate_line("sw $t0, " + res_offset + "($fp)");
         } else {
-            std::vector<std::string> _;
             std::string val_param_reg = get_reg(value_param, _);
             generate_line("sw " + val_param_reg + ", " + res_offset + "($fp)");
         }
     }
-    init_reg_indices();
+    clear_regs();
     
     generate_line("addi $sp, $sp, -8");
     generate_line("sw $ra, 0($sp)");
@@ -447,9 +445,8 @@ void generate_calculation(const std::string &function_name, const Quadruple &qua
     }
 }
 
-void assign_param(const std::string &function, const std::string &param) {
+void load_params(const std::string &function, const std::string &param) {
     ++n_param_read;
-    std::vector<std::string> _;
     std::string param_reg = get_reg(param, _);
     generate_line("lw " + param_reg + ", " + std::to_string(-n_param_read * 4) + "($fp)");
 }
@@ -467,13 +464,12 @@ void parse_quadruples() {
             generate_var_or_param_declaration(cur_function_name, quadruple.right);
         } else if (quadruple.op == DEFINE_PARAMETER_OP) { /* left: 参数类型, right: 参数名 */ // ????????????
             generate_var_or_param_declaration(cur_function_name, quadruple.right);
-            assign_param(cur_function_name, quadruple.right);
+            load_params(cur_function_name, quadruple.right);
         } else if (quadruple.op == PUSH_PARAMETER_OP) { /* left: 参数名 */
             value_params.push_back(quadruple.left);
         } else if (quadruple.op == CALL_FUNCTION_OP) { /* left: callee 函数名 */
             generate_function_call(cur_function_name, quadruple.left);
         } else if (quadruple.op == ASSIGN_RETURN_VAL_OP) { /* result: 返回值赋值的变量 */
-            std::vector<std::string> _;
             std::string reg = get_reg(quadruple.result, _);
             generate_line("move " + reg + ", $v0");
         } else if (quadruple.op == ASSIGN_OP) { /* left: assign left, right: assign right */
@@ -486,35 +482,31 @@ void parse_quadruples() {
                 generate_line("move " + dst_reg + ", " + src_reg);
             }
         } else if (quadruple.op == RETURN_OP) { /* left: 返回的变量, 可以没有 */
-            init_reg_indices();
+            clear_regs();
             if (!quadruple.left.empty()) { // 有返回值就保存到 $v0
                 if (!is_ir_var(quadruple.left)) {
                     generate_line("li $v0, " + quadruple.left);
                 } else {
-                    std::vector<std::string> _;
                     std::string reg = get_reg(quadruple.left, _);
                     generate_line("move $v0, " + reg);
                 }
             }
             generate_line("jr $ra");
         } else if (quadruple.op == JUMP_OP) {
-            init_reg_indices();
+            clear_regs();
             generate_line("j " + (quadruple.result == MAIN_SYM ? MAIN_SYM : quadruple.result.substr(1)));
         } else if (quadruple.op == BZ_OP) { /* left: var, result: label */
-            init_reg_indices();
-            std::vector<std::string> _;
+            clear_regs();
             std::string reg = get_reg(quadruple.left, _);
             generate_line("beqz " + reg + ", " + quadruple.result.substr(1));
         } else if (quadruple.op == BNZ_OP) { /* left: var, result: label */
-            init_reg_indices();
-            std::vector<std::string> _;
+            clear_regs();
             std::string reg = get_reg(quadruple.left, _);
             generate_line("bnez " + reg + ", " + quadruple.result.substr(1));
         } else if (quadruple.op == SCANF_OP) { /* left: var type, right: var var_name */
             std::string v0_val = quadruple.left == INT_SYM ? "5" : quadruple.left == CHAR_SYM ? "12" : "???";
             generate_line("li $v0, " + v0_val);
             generate_line("syscall");
-            std::vector<std::string> _;
             std::string reg = get_reg(quadruple.right, _);
             generate_line("move " + reg + ", $v0");
         } else if (quadruple.op == PRINTF_OP) {
@@ -522,7 +514,6 @@ void parse_quadruples() {
                 std::string v0_val = quadruple.left == INT_SYM ? "1" : "11";
                 generate_line("li $v0, " + v0_val);
                 if (is_ir_var(quadruple.right)) {
-                    std::vector<std::string> _;
                     std::string reg = get_reg(quadruple.right, _);
                     generate_line("move $a0, " + reg);
                 } else { /* imm */
@@ -539,7 +530,6 @@ void parse_quadruples() {
                 generate_line("syscall");
             }
         } else if (quadruple.op == READ_ARRAY_OP) { /* left: array_name, right: array_offset, result: dst */
-            std::vector<std::string> _;
             std::string dst_reg = get_reg(quadruple.result, _);
 //            int is_int =
 //                    get_non_function_symbol(cur_function_name, quadruple.left)->get_symbol_type() == INT_SYMBOL_TYPE;
@@ -566,7 +556,6 @@ void parse_quadruples() {
                 generate_line("lw " + dst_reg + ", ($v0)");
             }
         } else if (quadruple.op == WRITE_ARRAY_OP) { /* left: array_name, right: array_offset, result: src */
-            std::vector<std::string> _;
             std::string src_reg;
             if (!is_ir_var(quadruple.result)) {
                 generate_line("li $t0, " + quadruple.result); // 因为这里只用 $s, $t0 没用
@@ -598,7 +587,7 @@ void parse_quadruples() {
                 generate_line("sw " + src_reg + ", ($v0)");
             }
         } else if (quadruple.op == LABEL_OP) { /* left: label_name */
-            init_reg_indices();
+            clear_regs();
             generate_line(quadruple.left == MAIN_SYM ? quadruple.left : quadruple.left.substr(1) + ": ");
         } else if (quadruple.op == EXIT_OP) { // 有用吗?????????????
             ;

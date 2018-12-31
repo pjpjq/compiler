@@ -4,8 +4,8 @@
 
 #include "utils.h"
 
-void skip2before(const std::string &dst_token) {
-    while (cur_token_idx + 1 < tokens.size() && tokens[cur_token_idx + 1].get_val_string() != dst_token &&
+void skip2before(const std::string &target_token) {
+    while (cur_token_idx + 1 < tokens.size() && tokens[cur_token_idx + 1].get_val_string() != target_token &&
            tokens[cur_token_idx + 1].get_val_string() != SEMICOLON_SYM) {
         ++cur_token_idx;
     }

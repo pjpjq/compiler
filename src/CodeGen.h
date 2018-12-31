@@ -11,6 +11,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <cassert>
 #include <fstream>
 #include <vector>
 #include <unordered_map>
@@ -36,7 +37,7 @@ extern std::vector<Quadruple> quadruples;
 
 void init_code_generator();
 
-void init_reg_indices();
+void clear_regs();
 
 void generate_data_section();
 
@@ -52,7 +53,7 @@ void generate_function_call(const std::string &function_name, const std::string 
 
 void generate_calculation(const std::string &function_name, const Quadruple &quadruple);
 
-void assign_param(const std::string &function, const std::string &param);
+void load_params(const std::string &function, const std::string &param);
 
 void parse_quadruples();
 
