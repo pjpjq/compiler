@@ -40,34 +40,7 @@ void init_reg_indices();
 
 void generate_data_section();
 
-std::string get_reg(const std::string &content_name, std::vector<std::string> &conflict_names);
-//void record_busy_regs(std::vector<std::string> &busy_regs);
-//
-//void generate_store_busy_regs(std::vector<std::string> &busy_regs, int offset);
-//
-//void generate_load_busy_regs(std::vector<std::string> &busy_regs, int offset);
-//
-//void write_back_all_regs();
-//
-//void init_var_busy_regs();
-//
-//void init_all_regs();
-//
-//void store_global_regs();
-//
-//void before_branch_jump();
-//
-//void before_label();
-//
-//void before_return();
-
-//void local_dirty_regs_op(void(Reg::*op)(), bool reverse = false);
-
-//std::string get_available_register();
-//
-//void reg2ir_var(const std::string &function_name, const std::string &reg, const std::string &ir_var);
-//
-//void ir_var2reg(const std::string &function_name, const std::string &ir_var, const std::string &reg);
+std::string get_reg(const std::string &ir_var_name, std::vector<std::string> &conflict_ir_vars);
 
 void generate_line(const std::string &str);
 
@@ -84,5 +57,18 @@ void assign_param(const std::string &function, const std::string &param);
 void parse_quadruples();
 
 void generate_code(const std::string &dst_file_path);
+//void record_busy_regs(std::vector<std::string> &busy_regs);
+//void generate_store_busy_regs(std::vector<std::string> &busy_regs, int offset);
+//void generate_load_busy_regs(std::vector<std::string> &busy_regs, int offset);
+//void write_back_all_regs();
+//void init_var_busy_regs();
+//void init_all_regs();
+//void store_global_regs();
+//void before_branch_jump();
+//void before_label();
+//void before_return();
+//void local_dirty_regs_op(void(Reg::*op)(), bool reverse = false);
+//void reg2ir_var(const std::string &function_name, const std::string &reg, const std::string &ir_var);
+//void ir_var2reg(const std::string &function_name, const std::string &ir_var, const std::string &reg);
 
 #endif //COMPILER_CODEGEN_H

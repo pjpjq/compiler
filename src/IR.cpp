@@ -8,7 +8,7 @@ std::vector<int> labels;
 std::vector<int> temp_vars;
 std::vector<Quadruple> quadruples;
 
-const std::string &ir_fout_name = "../outputs/ir.txt";
+const std::string ir_fout_name = "../outputs/ir.txt";
 std::ofstream ir_fout;
 
 void init_IR() {
@@ -17,6 +17,12 @@ void init_IR() {
     quadruples.clear();
     
     ir_fout.open(ir_fout_name);
+    if (!ir_fout) {
+        ir_fout.open("./ir.txt");
+    }
+    if (!ir_fout) {
+        error_message("IR file cannot be opened!");
+    }
 }
 
 void emit(Quadruple quadruple) {

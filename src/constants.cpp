@@ -75,7 +75,7 @@ std::unordered_set<std::string> SEPARATOR_SET{PLUS_SYM, MINUS_SYM, MUL_SYM, DIV_
                                               RBRACKET_SYM, LBRACE_SYM, RBRACE_SYM};
 
 /**
- * 四元式的运算, 末尾加空格使之不能被作为标识符
+ * 四元式的运算, 末尾加空格使之不可能被作为标识符引出 bug
  */
 std::string DECLARE_FUNCTION_OP = "declare_function ";
 std::string DEFINE_PARAMETER_OP = "define_parameter ";

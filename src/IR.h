@@ -32,7 +32,7 @@ extern std::vector<Quadruple> quadruples;
 void init_IR();
 
 /**
- * 判断一个 str 是不是 label: "@label_i_function name_info" 型
+ * 判断一个 str 是不是 numbered label: "@label_i_function name_info" 型
  * @param str
  * @return
  */
@@ -139,14 +139,14 @@ class Quadruple {
             }
             return out << "bnz " << quadruple.left << " " << quadruple.result;
         }
-        if (quadruple.op == SCANF_OP) { /* left: var type, right: var name */
+        if (quadruple.op == SCANF_OP) { /* left: var type, right: var var_name */
             if (quadruple.left != INT_SYM && quadruple.left != CHAR_SYM) {
                 error_message("Quadruple scanf_op expects int/char as left, not: " + quadruple.left);
             }
             return out << "scanf " << quadruple.left << " " << quadruple.right;
         }
         if (quadruple.op == PRINTF_OP) {
-            if (quadruple.left == INT_SYM || quadruple.left == CHAR_SYM) { /* left: var type, right: var name */
+            if (quadruple.left == INT_SYM || quadruple.left == CHAR_SYM) { /* left: var type, right: var var_name */
                 return out << "print " << quadruple.left << " " << quadruple.right;
             } else if (quadruple.left == PRINTF_STRING_TYPE_SYM) { /* left: string type, right: str_i */
                 return out << "print " << quadruple.left << " " << quadruple.right;

@@ -8,14 +8,15 @@
 
 int main() {
     int n_tests = 1;
-    std::string test_file_path = "15241035_test.txt";
+    std::string test_file_path = "test1.txt";
+//    std::string test_file_path = "15241035_test.txt";
     if (CIN_TEST_FILE) {
-        std::cout << "Enter test file name: ";
+        std::cout << "Enter test file var_name: ";
         std::cin >> test_file_path;
     }
     
-    std::string messages_file_path = "messages_" + test_file_path;
-    std::string dst_file_path = "dst_" + test_file_path + ".asm";
+    std::string messages_file_path = "test_messages.txt";
+    std::string dst_file_path = "test_result.asm";
     
     if (USE_MAC_CLION) {
         std::cout << "[Warning] 注意当前代码路径仅适用于 Mac Clion 而不是 CodeBlocks!" << std::endl;

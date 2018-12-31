@@ -49,11 +49,11 @@ bool parse_integer(int &res) {
 
 bool parse_const_definition(const std::string &function_name) {
     if (!function_name.empty() && !is_function(function_name)) {
-        error_message("Undefined function name passed in const definition: " + function_name);
+        error_message("Undefined function var_name passed in const definition: " + function_name);
         return false;
     }
     bool is_correct_const_definition = true;
-    std::string const_name = "[INVALID const name !!!]";
+    std::string const_name = "[INVALID const var_name !!!]";
     SymbolType const_type;
     int const_val = -2333;
     /* int/char */
@@ -70,7 +70,7 @@ bool parse_const_definition(const std::string &function_name) {
     int n_const_definitions = 0;
     do {
         ++cur_token_idx;
-        /* const name */
+        /* const var_name */
         if (tokens[cur_token_idx].get_output_type() != IDENTIFIER) {
             error_message("Expected identifier in const def, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_const_definition = false;
@@ -85,12 +85,17 @@ bool parse_const_definition(const std::string &function_name) {
         }
         ++cur_token_idx;
         /* val */
-        if (const_type == INT_SYMBOL_TYPE) {
+        if (const_type == INT_SYMBOL_TYPE) { /* const int */
             if (!parse_integer(const_val)) {
-                error_message("Invalid Integer in const definition!");
+                error_message("Invalid Integer in const int definition!");
                 is_correct_const_definition = false;
             }
-        } else {
+        } else { /* const char */
+            if (tokens[cur_token_idx].get_output_type() != CHAR) {
+                error_message("Const char definition expected char type, not: " +
+                              token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
+                is_correct_const_definition = false;
+            }
             const_val = tokens[cur_token_idx].get_val_int();
             ++cur_token_idx;
         }
@@ -148,7 +153,7 @@ bool parse_const_declarations(const std::string &function_name) {
 
 bool parse_variable_definition(const std::string &function_name) {
     if (!function_name.empty() && !is_function(function_name)) {
-        error_message("Undefined function name passed in variable definition: " + function_name);
+        error_message("Undefined function var_name passed in variable definition: " + function_name);
         return false;
     }
     bool is_correct_variable_definition = true;
@@ -200,12 +205,9 @@ bool parse_variable_definition(const std::string &function_name) {
                 is_correct_variable_definition = false;
             }
             /* ] */
-            if (tokens[cur_token_idx].get_val_string() != RBRACKET_SYM) {
+            if (tokens[cur_token_idx].get_val_string() != RBRACKET_SYM ||
+                tokens[cur_token_idx].get_output_type() != SEPARATOR) {
                 error_message("Expected ], not: " + tokens[cur_token_idx].get_val_string());
-                is_correct_variable_definition = false;
-            }
-            if (tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-                error_message("] in wrong type: " + token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
                 is_correct_variable_definition = false;
             }
             ++cur_token_idx;
@@ -234,12 +236,9 @@ bool parse_variable_declarations(const std::string &function_name) {
             is_correct_variable_declarations = false;
         }
         /* ; */
-        if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM) {
+        if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
+            tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Expected ; not: " + tokens[cur_token_idx].get_val_string());
-            is_correct_variable_declarations = false;
-        }
-        if (tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-            error_message("; in wrong type: " + token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
             is_correct_variable_declarations = false;
         }
         ++cur_token_idx;
@@ -250,7 +249,7 @@ bool parse_variable_declarations(const std::string &function_name) {
              tokens[cur_token_idx + 2].get_val_string() == LBRACKET_SYM ||
              tokens[cur_token_idx + 2].get_val_string() == COMMA_SYM)) { /* 下一个还是变量定义 */
             if (tokens[cur_token_idx].get_output_type() != KEYWORD) {
-                error_message("wrong type i/ch in var declarations : " +
+                error_message("wrong type int/char in var declarations : " +
                               token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
                 is_correct_variable_declarations = false;
             }
@@ -289,8 +288,7 @@ bool parse_parameter_list(const std::string &function_name) {
         if (tokens[cur_token_idx].get_val_string() != INT_SYM && tokens[cur_token_idx].get_val_string() != CHAR_SYM) {
             error_message("Expected int/char in parameter list, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_parameter_list = false;
-        }
-        if (tokens[cur_token_idx].get_output_type() != KEYWORD) {
+        } else if (tokens[cur_token_idx].get_output_type() != KEYWORD) {
             error_message("int/char in wrong type: " + token_output_type_strs[tokens[cur_token_idx].get_output_type()]);
             is_correct_parameter_list = false;
         }
@@ -317,7 +315,7 @@ bool parse_parameter_list(const std::string &function_name) {
 
 bool parse_block(const std::string &function_name) {
     if (!is_function(function_name)) {
-        error_message("Undefined/No function name passed in block: " + function_name);
+        error_message("Undefined/No function var_name passed in block: " + function_name);
         return false;
     }
     bool is_correct_block = true;
@@ -342,6 +340,7 @@ bool parse_block(const std::string &function_name) {
         if (!parse_statements(function_name, has_return_statement)) {
             error_message("Invalid statements!");
             is_correct_block = false;
+            skip2before(RBRACE_SYM);
         }
         /* } */
         if (tokens[cur_token_idx].get_val_string() == RBRACE_SYM &&
@@ -365,7 +364,7 @@ bool parse_block(const std::string &function_name) {
 
 bool parse_statements(const std::string &function_name, bool &has_return_statement) {
     if (!is_function(function_name)) {
-        error_message("Undefined/No function name passed in statements: " + function_name);
+        error_message("Undefined/No function var_name passed in statements: " + function_name);
         return false;
     }
     bool is_correct_statements = true;
@@ -425,6 +424,7 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
             is_correct_statements = false;
         }
         ++cur_token_idx;
+        
         /* ; */
         if (tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM ||
             tokens[cur_token_idx].get_output_type() != SEPARATOR) {
@@ -432,6 +432,7 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
             is_correct_statements = false;
         }
         ++cur_token_idx;
+        
         if (is_correct_statements) {
             std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done return statement!" << std::endl;
         }
@@ -450,6 +451,7 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
             is_correct_statements = false;
         }
         ++cur_token_idx;
+        
         if (is_correct_statements) {
             std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done scanf statement!" << std::endl;
         }
@@ -468,6 +470,7 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
             is_correct_statements = false;
         }
         ++cur_token_idx;
+        
         if (is_correct_statements) {
             std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done printf statement!" << std::endl;
         }
@@ -490,30 +493,37 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
                 error_message("Got [ but in wrong type: " + symbol_type_strs[tokens[cur_token_idx].get_output_type()]);
                 is_correct_statements = false;
             }
-            if (!var->is_array()) { // TODO skip to ]
+            if (!var->is_array()) {
                 error_message("Use [ for single variable as assignment left: " + var->get_name());
-            }
-            ++cur_token_idx;
-            /* 处理 offset */
-            bool is_offset_imm = false;
-            int offset_val = -2333;
-            std::string offset_temp_var = "[INVALID offset val]";
-            SymbolType offset_type = UNKNOWN_SYMBOL_TYPE;
-            if (!parse_expression(function_name, is_offset_imm, offset_val, offset_temp_var, offset_type)) {
-                error_message("Invalid expression as offset!");
                 is_correct_statements = false;
-            }
-            if (is_offset_imm && (offset_val >= var->get_length() || offset_val < 0)) { /* 写数组越界 */
-                warning_message("Segfault: writing array index out of range: " + std::to_string(offset_val));
-                offset_val = 0;
-                is_correct_statements = false;
-            }
-            offset_str = is_offset_imm ? std::to_string(offset_val) : offset_temp_var;
-            /* ] */
-            if (tokens[cur_token_idx].get_val_string() != RBRACKET_SYM ||
-                tokens[cur_token_idx].get_output_type() != SEPARATOR) {
-                error_message("] is expected in assignment statement, not: " + tokens[cur_token_idx].get_val_string());
-                is_correct_statements = false;
+                skip2before(RBRACKET_SYM);
+                ++cur_token_idx;
+            } else {
+                ++cur_token_idx;
+                /* 处理 offset */
+                bool is_offset_imm = false;
+                int offset_val = -2333;
+                std::string offset_temp_var = "[INVALID offset val]";
+                SymbolType offset_type = UNKNOWN_SYMBOL_TYPE;
+                if (!parse_expression(function_name, is_offset_imm, offset_val, offset_temp_var, offset_type)) {
+                    error_message("Invalid expression as offset!");
+                    is_correct_statements = false;
+                }
+                if (offset_type != INT_SYMBOL_TYPE) {
+                    error_message("Offset expected int, not: " + symbol_type_strs[offset_type]);
+                    is_correct_statements = false;
+                } else if (is_offset_imm && (offset_val >= var->get_length() || offset_val < 0)) { /* 写数组越界 */
+                    warning_message("Segfault: writing array index out of range: " + std::to_string(offset_val));
+                    offset_val = 0;
+                    is_correct_statements = false;
+                }
+                offset_str = is_offset_imm ? std::to_string(offset_val) : offset_temp_var;
+                /* ] */
+                if (tokens[cur_token_idx].get_val_string() != RBRACKET_SYM ||
+                    tokens[cur_token_idx].get_output_type() != SEPARATOR) {
+                    error_message("Expected ] in assigning array, not: " + tokens[cur_token_idx].get_val_string());
+                    is_correct_statements = false;
+                }
             }
             ++cur_token_idx;
         }
@@ -521,8 +531,7 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
         if (tokens[cur_token_idx].get_val_string() != ASSIGN_SYM) {
             error_message("= is expected in assignment statement, not: " + tokens[cur_token_idx].get_val_string());
             is_correct_statements = false;
-        }
-        if (tokens[cur_token_idx].get_output_type() != SEPARATOR) {
+        } else if (tokens[cur_token_idx].get_output_type() != SEPARATOR) {
             error_message("Got = but in wrong type: " + symbol_type_strs[tokens[cur_token_idx].get_output_type()]);
             is_correct_statements = false;
         }
@@ -543,8 +552,8 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
         }
         /* 检查类型是否相同 */
         if (var->get_symbol_type() != right_type) {
-            error_message("Different type assignment, left: " + symbol_type_strs[var->get_symbol_type()] + ", right: " +
-                          symbol_type_strs[right_type]);
+            error_message("Different types in assignment, left: " + symbol_type_strs[var->get_symbol_type()] +
+                          ", right: " + symbol_type_strs[right_type]);
             is_correct_statements = false;
         }
         /* 生成赋值四元式 */
@@ -560,6 +569,7 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
             is_correct_statements = false;
         }
         ++cur_token_idx;
+        
         if (is_correct_statements) {
             std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done assignment!" << std::endl;
         }
@@ -579,6 +589,7 @@ bool parse_statements(const std::string &function_name, bool &has_return_stateme
             is_correct_statements = false;
         }
         ++cur_token_idx;
+        
         if (is_correct_statements) {
             std::cout << "Line " << tokens[cur_token_idx].get_line_num() << ": done function call!" << std::endl;
         }
@@ -684,7 +695,7 @@ bool parse_loop_statement(const std::string &function_name, bool &has_return_sta
         if (is_condition_imm) {
             if (condition_val > 0) { /* while 内条件恒真, j 到 enter */
                 emit(Quadruple(JUMP_OP, "", "", enter_do_while_label));
-            }
+            } /* else 恒假, 就直接顺序过, 不需要语句 */
         } else { /* 不知, 当为真时跳 即 bnz 到 enter */
             emit(Quadruple(BNZ_OP, condition_temp_var, "", enter_do_while_label));
         }
@@ -749,7 +760,7 @@ bool parse_loop_statement(const std::string &function_name, bool &has_return_sta
         }
         /* 检查类型是否相同 */
         if (init_var->get_symbol_type() != init_right_type) {
-            error_message("Different type assignment in for-loop init, left: " +
+            error_message("Different types in assignment in for-loop init, left: " +
                           symbol_type_strs[init_var->get_symbol_type()] + ", right: " +
                           symbol_type_strs[init_right_type]);
             is_correct_loop_statement = false;
@@ -775,8 +786,8 @@ bool parse_loop_statement(const std::string &function_name, bool &has_return_sta
         if (is_condition_imm) {
             if (condition_val == 0) { /* for 条件恒假, j 到结束 */
                 emit(Quadruple(JUMP_OP, "", "", done_for_label));
-            }
-        } else { /* 条件不知, 当假时才跳结束 */
+            } /* else 条件恒真, 就顺序执行 */
+        } else { /* 条件不知, 当假时才跳结束 bz */
             emit(Quadruple(BZ_OP, condition_temp_var, "", done_for_label));
         }
         /* ; */
@@ -838,7 +849,7 @@ bool parse_loop_statement(const std::string &function_name, bool &has_return_sta
             error_message("Expected >=0 int as for-loop updating size, not " + tokens[cur_token_idx].get_val_string());
             is_correct_loop_statement = false;
         }
-        /* 检查类型, 这里就检查左边是不是 INT */
+        /* 检查类型, 这里只需检查左边是不是 INT */
         if (updating_left_var->get_symbol_type() != INT_SYMBOL_TYPE) {
             error_message("For-loop updating got non-int: " + symbol_type_strs[updating_left_var->get_symbol_type()]);
             is_correct_loop_statement = false;
@@ -922,7 +933,7 @@ bool parse_conditional_statement(const std::string &function_name, bool &has_ret
     /* 可选的 else */
     if (tokens[cur_token_idx].get_val_string() == ELSE_SYM && tokens[cur_token_idx].get_output_type() == KEYWORD) {
         ++cur_token_idx;
-        if (!parse_statements(function_name, has_return_statement)) {        /* if false 后语句 */
+        if (!parse_statements(function_name, has_return_statement)) { /* else 里语句 */
             error_message("Invalid statement after else!");
             is_correct_conditional_statement = false;
         }
@@ -940,6 +951,10 @@ bool parse_condition(const std::string &function_name, bool &is_res_imm, int &re
         error_message("Invalid expression as condition left!");
         is_correct_condition = false;
     }
+    if (res_type != INT_SYMBOL_TYPE) {
+        error_message("Condition left is not int: " + symbol_type_strs[res_type]);
+        is_correct_condition = false;
+    }
     /* 可选的比较运算符 */
     std::string op = tokens[cur_token_idx].get_val_string();
     if ((op == EQ_SYM || op == NE_SYM || op == LT_SYM || op == GT_SYM || op == LE_SYM || op == GE_SYM) &&
@@ -953,6 +968,10 @@ bool parse_condition(const std::string &function_name, bool &is_res_imm, int &re
         if (!parse_expression(function_name, is_condition_right_imm, condition_right_val, condition_right_temp_var,
                               condition_right_type)) {
             error_message("Invalid expression as condition right!");
+            is_correct_condition = false;
+        }
+        if (condition_right_type != INT_SYMBOL_TYPE) {
+            error_message("Condition right is not int: " + symbol_type_strs[condition_right_type]);
             is_correct_condition = false;
         }
         /* 处理结果 */
@@ -1161,6 +1180,9 @@ bool parse_expression(const std::string &function_name, bool &is_res_imm, int &r
         op = tokens[cur_token_idx].get_val_string();
     } while ((tokens[cur_token_idx].get_val_string() == MINUS_SYM || tokens[cur_token_idx].get_val_string() == PLUS_SYM)
              && tokens[cur_token_idx].get_output_type() == SEPARATOR && n_terms < MAX_N_TERMS_PER_EXPRESSION);
+    if (n_terms > 1) {
+        res_type = INT_SYMBOL_TYPE;
+    }
     return is_correct_expression;
 }
 
@@ -1196,6 +1218,7 @@ bool parse_term(const std::string &function_name, bool &is_res_imm, int &res_val
         if (op == DIV_SYM && is_factor_imm && factor_val == 0) {
             error_message("Divided by 0 is not defined!");
             factor_val = 1;
+            is_correct_term = false;
         }
         // TODO further 常数合并
         if (is_res_imm) { /* 之前的因子结果都是常数 */
@@ -1223,6 +1246,9 @@ bool parse_term(const std::string &function_name, bool &is_res_imm, int &res_val
         op = tokens[cur_token_idx].get_val_string();
     } while ((tokens[cur_token_idx].get_val_string() == MUL_SYM || tokens[cur_token_idx].get_val_string() == DIV_SYM) &&
              tokens[cur_token_idx].get_output_type() == SEPARATOR && n_factors < MAX_N_FACTORS_PER_TERM);
+    if (n_factors > 1) {
+        res_type = INT_SYMBOL_TYPE;
+    }
     return is_correct_term;
 }
 
@@ -1318,7 +1344,10 @@ bool parse_factor(const std::string &function_name, bool &is_res_imm, int &res_v
                 error_message("Invalid offset expression when accessing array " + identifier_name);
                 is_correct_factor = false;
             }
-            if (is_offset_imm && (offset_val >= var->get_length() || offset_val < 0)) {
+            if (offset_type != INT_SYMBOL_TYPE) {
+                error_message("Offset expected int, not: " + symbol_type_strs[offset_type]);
+                is_correct_factor = false;
+            } else if (is_offset_imm && (offset_val >= var->get_length() || offset_val < 0)) {
                 warning_message("Segfault: reading array index out of index: " + std::to_string(offset_val));
                 offset_val = 0;
                 is_correct_factor = false;
@@ -1419,7 +1448,8 @@ bool parse_funtion_call(const std::string &function_name) {
 bool parse_value_parameters(const std::string &function_name, const std::string &callee) {
     bool is_correct_value_parameters = true;
     std::vector<SymbolType> value_param_types;
-    if (tokens[cur_token_idx].get_val_string() == RPARENTHESIS_SYM) { /* 直接到 } 了, 没有参数 */
+    if (tokens[cur_token_idx].get_val_string() == RPARENTHESIS_SYM &&
+        tokens[cur_token_idx].get_output_type() == SEPARATOR) { /* 直接到 } 了, 没有参数 */
         return is_matched_parameter_type(callee, value_param_types);
     }
     /* 有参数 */

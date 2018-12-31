@@ -7,15 +7,16 @@
 struct Reg {
     int offset = -1;
     int n_uses = 0;
-    std::string name;
+    std::string var_name;
     bool is_active = false;
-    bool is_int = 1;
+//    bool is_int = 1;
     bool is_global = false;
 };
+
 const int N_REGS = 8;
 int next_reg_idx = 0;
 Reg regs[20];
-std::unordered_map<std::string, int> reg_indices;
+std::unordered_map<std::string, int> var2reg_idx;
 
 std::vector<std::string> lines;
 std::unordered_map<std::string, int> gp_offsets;
@@ -25,7 +26,7 @@ std::string cur_function_name;
 //std::unordered_map<std::string, int> function_stack_sizes;
 //int gp_stack_size;
 int temp_base_addr = 0;
-int int_ptr = 0;  // 统一先用再分配给下一个
+int int_ptr = 0;  // 统一先用, 再分配给下一个
 int cur_addr = 0;
 int n_param_read = 0;
 std::vector<std::string> value_params;
@@ -39,7 +40,7 @@ std::ofstream code_fout;
 Quadruple cur_quad = Quadruple(EXIT_OP, "", "", "");  // for debugging
 
 //std::unordered_map<std::string, Reg *> regs;
-//std::unordered_map<std::string, Reg *> content2reg;
+//std::unordered_map<std::string, Reg *> var2reg_idx;
 //std::set<std::string> free_temps_vars;
 
 void init_code_generator() {
@@ -67,7 +68,7 @@ void init_code_generator() {
 }
 
 void init_reg_indices() { // save regs
-    reg_indices.clear();
+    var2reg_idx.clear();
     for (int i = 0; i < N_REGS; ++i) {
         if (regs[i].is_active) {
             std::string ptr = regs[i].is_global ? "($gp)" : "($fp)";
@@ -92,76 +93,68 @@ void generate_data_section() {
     generate_line("");
 }
 
-std::string get_reg(const std::string &content_name, std::vector<std::string> &conflict_names) {
-    bool is_int = true;
-    if (!is_temp_var(content_name)) {
-        Symbol *var = get_non_function_symbol(cur_function_name, content_name.substr(1));
-        if (!var) { return ">>>>>>????"; }
-        is_int = var->get_symbol_type() == INT_SYMBOL_TYPE;
+std::string get_reg(const std::string &ir_var_name, std::vector<std::string> &conflict_ir_vars) {
+//    bool is_int = true;
+    if (!is_temp_var(ir_var_name)) {
+        Symbol *var = get_non_function_symbol(cur_function_name, ir_var_name.substr(1));
+        if (!var) { return "no such var >>>>>>????"; }
+//        is_int = var->get_symbol_type() == INT_SYMBOL_TYPE;
     }
     
-    if (reg_indices.count(content_name) > 0) {
-        return "$s" + std::to_string(reg_indices[content_name]);
+    if (var2reg_idx.count(ir_var_name) > 0) { // s0-s7
+        return "$s" + std::to_string(var2reg_idx[ir_var_name]);
     }
-    if (!conflict_names.empty()) {
-        bool conflict = false;
+    if (!conflict_ir_vars.empty()) {
         while (true) {
-            conflict = false;
-            for (int i = 0; i < conflict_names.size(); ++i) {
-                if (conflict_names[i] == regs[next_reg_idx].name) {
-                    conflict = true;
+            bool is_conflict = false;
+            for (int i = 0; i < conflict_ir_vars.size(); ++i) {
+                if (conflict_ir_vars[i] == regs[next_reg_idx].var_name) {
+                    is_conflict = true;
                     break;
                 }
             }
-            if (conflict) {
-                next_reg_idx = (next_reg_idx + 1) % N_REGS;
-            } else {
-                break;
-            }
+            if (!is_conflict) { break; }
+            next_reg_idx = (next_reg_idx + 1) % N_REGS;
         }
     }
-    bool keep_active = false;
-    if (regs[next_reg_idx].is_active) {
+    bool was_active = regs[next_reg_idx].is_active;
+    if (was_active) {
         std::string ptr = regs[next_reg_idx].is_global ? "($gp)" : "($fp)";
         generate_line("sw $s" + std::to_string(next_reg_idx) + ", " + std::to_string(regs[next_reg_idx].offset) + ptr);
-        keep_active = true;
     } else {
-        keep_active = false;
         regs[next_reg_idx].is_active = true;
     }
     
-    if (is_temp_var(content_name)) {
-        regs[next_reg_idx].offset = temp_base_addr + std::stoi(content_name.substr(1)) * 4;
+    if (is_temp_var(ir_var_name)) {
+        regs[next_reg_idx].offset = temp_base_addr + std::stoi(ir_var_name.substr(1)) * 4;
         cur_addr = std::max(regs[next_reg_idx].offset + 4, cur_addr);
         regs[next_reg_idx].is_global = false;
     } else {
-        if (local_offsets.count(content_name) > 0) {
-            regs[next_reg_idx].offset = local_offsets[content_name];
+        if (local_offsets.count(ir_var_name) > 0) {
+            regs[next_reg_idx].offset = local_offsets[ir_var_name];
             regs[next_reg_idx].is_global = false;
+        } else if (gp_offsets.count(ir_var_name) > 0) {
+            regs[next_reg_idx].offset = gp_offsets[ir_var_name];
+            regs[next_reg_idx].is_global = true;
         } else {
-            if (gp_offsets.count(content_name) > 0) {
-                regs[next_reg_idx].offset = gp_offsets[content_name];
-                regs[next_reg_idx].is_global = true;
-            } else {
-                error_message("No such var: " + content_name);
-            }
+            error_message("No such non-temp ir_var: " + ir_var_name);
         }
     }
     
     std::string ptr = regs[next_reg_idx].is_global ? "($gp)" : "($fp)";
     generate_line("lw $s" + std::to_string(next_reg_idx) + ", " + std::to_string(regs[next_reg_idx].offset) + ptr);
     regs[next_reg_idx].n_uses = 0;
-    regs[next_reg_idx].is_int = is_int;
-    if (keep_active) {
-        if (reg_indices.count(regs[next_reg_idx].name) == 0) {
-            error_message("No such using content_name: " + regs[next_reg_idx].name);
+//    regs[next_reg_idx].is_int = is_int;
+    if (was_active) {
+        if (var2reg_idx.count(regs[next_reg_idx].var_name) == 0) {
+            error_message("No such active ir_var_name: " + regs[next_reg_idx].var_name);
         } else {
-            reg_indices.erase(reg_indices.find(regs[next_reg_idx].name));
+            var2reg_idx.erase(var2reg_idx.find(regs[next_reg_idx].var_name));
         }
     }
     
-    regs[next_reg_idx].name = content_name;
-    reg_indices[content_name] = next_reg_idx;
+    regs[next_reg_idx].var_name = ir_var_name;
+    var2reg_idx[ir_var_name] = next_reg_idx;
     
     std::string res = std::to_string(next_reg_idx);
     next_reg_idx = (next_reg_idx + 1) % N_REGS;
@@ -240,12 +233,6 @@ std::string get_reg(const std::string &content_name, std::vector<std::string> &c
 ////            (it.second->*op)();
 ////        }
 ////    }
-//}
-
-//std::string get_available_register() {
-//    std::string reg = REGS[available_reg_idx];
-//    available_reg_idx = (available_reg_idx + 1) % REGS.size();
-//    return reg;
 //}
 
 
@@ -354,7 +341,7 @@ void generate_function_call(const std::string &caller, const std::string &callee
     generate_line("addi $sp, $sp, 8");
 }
 
-void generate_calculation(const std::string &function_name, const Quadruple &quadruple) { // TODO 检查
+void generate_calculation(const std::string &function_name, const Quadruple &quadruple) { // TODO 检查一遍
     if (!is_function(function_name)) {
         error_message("Trying calculation in invalid function: " + function_name);
         return;
@@ -523,7 +510,7 @@ void parse_quadruples() {
             std::vector<std::string> _;
             std::string reg = get_reg(quadruple.left, _);
             generate_line("bnez " + reg + ", " + quadruple.result.substr(1));
-        } else if (quadruple.op == SCANF_OP) { /* left: var type, right: var name */
+        } else if (quadruple.op == SCANF_OP) { /* left: var type, right: var var_name */
             std::string v0_val = quadruple.left == INT_SYM ? "5" : quadruple.left == CHAR_SYM ? "12" : "???";
             generate_line("li $v0, " + v0_val);
             generate_line("syscall");
@@ -531,7 +518,7 @@ void parse_quadruples() {
             std::string reg = get_reg(quadruple.right, _);
             generate_line("move " + reg + ", $v0");
         } else if (quadruple.op == PRINTF_OP) {
-            if (quadruple.left == INT_SYM || quadruple.left == CHAR_SYM) { /* left: var type, right: var name/imm */
+            if (quadruple.left == INT_SYM || quadruple.left == CHAR_SYM) { /* left: var type, right: var var_name/imm */
                 std::string v0_val = quadruple.left == INT_SYM ? "1" : "11";
                 generate_line("li $v0, " + v0_val);
                 if (is_ir_var(quadruple.right)) {
@@ -582,7 +569,7 @@ void parse_quadruples() {
             std::vector<std::string> _;
             std::string src_reg;
             if (!is_ir_var(quadruple.result)) {
-                generate_line("li $t0, " + quadruple.result);
+                generate_line("li $t0, " + quadruple.result); // 因为这里只用 $s, $t0 没用
                 src_reg = "$t0";
             } else {
                 src_reg = get_reg(quadruple.result, _);

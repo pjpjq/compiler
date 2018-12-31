@@ -6,7 +6,9 @@
 #define COMPILER_TOKEN_H
 
 #include <string>
+#include <vector>
 #include "constants.h"
+
 
 /* 用于输出的大类型 */
 enum TokenOutputType {
@@ -34,7 +36,7 @@ public:
      * 值: 数字或字符串
      * @return string of "token_output_type token_val_int/token_val_string"
      */
-    std::string get_output_string();
+//    std::string get_output_string();
     
     TokenOutputType get_output_type();
     

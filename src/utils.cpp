@@ -4,13 +4,17 @@
 
 #include "utils.h"
 
+void skip2before(const std::string &dst_token) {
+    while (cur_token_idx + 1 < tokens.size() && tokens[cur_token_idx + 1].get_val_string() != dst_token &&
+           tokens[cur_token_idx + 1].get_val_string() != SEMICOLON_SYM) {
+        ++cur_token_idx;
+    }
+}
+
 void error_message(const std::string &error_info, int line_num) {
     std::cout << "[ERROR] Line " << (line_num > 0 ? line_num : tokens[cur_token_idx].get_line_num()) << ": "
               << error_info << std::endl;
     ++n_errors;
-//    while (cur_token_idx < tokens.size() && tokens[cur_token_idx].get_val_string() != SEMICOLON_SYM) {
-//        ++cur_token_idx;
-//    }
 }
 
 void warning_message(const std::string &warning_info, int line_num) {
